@@ -102,7 +102,7 @@ aside {
 }
 
 .numerito{
-    background-color: #1f3845 ;
+    background-color: #b9d3e1 ;
     color: white;
     padding: .15rem .25rem;
     border-radius: .25rem;
@@ -187,7 +187,7 @@ main{
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color:#2c4d5b83 ;
+    background-color:#8da9b683 ;
     color: rgb(0, 0, 0);
     padding: .5rem;
     padding-right: 1.5rem;
@@ -216,7 +216,7 @@ main{
 
 .carrito-acciones-vaciar{
     border: 0;
-    background-color: #36708983;
+    background-color: #274f6183;
     padding: 1rem;
     border-radius: 1rem;
     color: white;
@@ -230,7 +230,7 @@ main{
 
 .carrito-acciones-total{
     display: flex;
-    background-color: #36708983;
+    background-color: #274f6183;
     padding: 1rem;
     color: white;
     text-transform: uppercase;
@@ -248,6 +248,70 @@ main{
     text-transform: uppercase;
     border-top-right-radius: 1rem ;
     border-bottom-right-radius: 1rem ;
+}
+
+.carrito-producto-cantidad,
+.carrito-producto-precio,
+.carrito-producto-subtotal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Asegura que la columna del título alinee sus elementos a la izquierda */
+.carrito-producto-titulo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Esto alinea la palabra "Título" y el nombre del libro a la izquierda */
+    flex-grow: 1; /* Hace que ocupe el espacio disponible y empuje a las demás columnas */
+    margin-left: 1rem; /* Separa un poco el título de la imagen del libro */
+}
+
+.carrito-producto > div {
+    flex: 1; /* Hace que todas las secciones compartan el espacio de manera equilibrada */
+}
+
+/* Opcional: aseguramos que el título mantenga su alineación a la izquierda */
+.carrito-producto-titulo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-left: 0;
+}
+
+/* Contenedor que alinea el botón -, el número y el botón + en fila */
+.carrito-producto-contador {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 4px;
+}
+
+/* Estilo para los botones de restar y sumar */
+.carrito-sustraer,
+.carrito-agregar {
+    border: none;
+    background-color: #274f6183;
+    color: white;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%; /* Los hace circulares */
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.carrito-sustraer:hover,
+.carrito-agregar:hover {
+    background-color: #1f3845;
+}
+
+/* Opcional: si quieres que el título tenga un poco de espacio con respecto a la cantidad */
+.carrito-producto {
+    gap: 1rem;
 }
 
 .disable{

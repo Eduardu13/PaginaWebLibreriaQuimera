@@ -27,7 +27,7 @@ if(LibrosEnCarrito && LibrosEnCarrito.length > 0){
 
     contenedorCarritoProductos.innerHTML = "";
 
-    LibrosEnCarrito.forEach(producto => {
+   LibrosEnCarrito.forEach(producto => {
         
         const div = document.createElement("div");
         div.classList.add("carrito-producto");
@@ -39,10 +39,17 @@ if(LibrosEnCarrito && LibrosEnCarrito.length > 0){
                         <small>Titulo</small>
                         <h3>${producto.titulo}</h3>
                     </div>
+
+                    <!-- AQUÍ ES DONDE VA EL CAMBIO DE LA CANTIDAD -->
                     <div class="carrito-producto-cantidad">
                         <small>Cantidad</small>
-                        <p>${producto.cantidad}</p>
+                        <div class="carrito-producto-contador">
+                            <button class="carrito-sustraer" id="${producto.id}">-</button>
+                            <p>${producto.cantidad}</p>
+                            <button class="carrito-agregar" id="${producto.id}">+</button>
+                        </div>
                     </div>
+                    <!-- ----------------------------------------- -->
 
                     <div class="carrito-producto-precio">
                         <small>Precio</small>
@@ -73,6 +80,7 @@ if(LibrosEnCarrito && LibrosEnCarrito.length > 0){
     }
 
     actualizarBotonesEliminar();
+    actualizarBotonesCantidad();
     actualizarTotal();
 }
 
@@ -140,4 +148,50 @@ function comprarCarrito(){
 
     // 3. Si el carrito tiene libros y el usuario SÍ tiene sesión, le abrimos la puerta al envío
     window.location.href = "envio.html";
+}
+
+
+// --- FUNCIONES PARA AUMENTAR Y DISMINUIR CANTIDAD ---
+
+function disminuirCantidad(e) {
+    const idBoton = e.currentTarget.id;
+    const producto = LibrosEnCarrito.find(prod => prod.id === idBoton);
+    
+    if (producto.cantidad > 1) {
+        producto.cantidad--;
+    } else {
+        // Si la cantidad llega a 1 y le dan a '-', puedes eliminarlo o dejarlo en 1.
+        // Si prefieres que se elimine al llegar a 0, descomenta las líneas de abajo:
+        /*
+        const index = LibrosEnCarrito.findIndex(prod => prod.id === idBoton);
+        LibrosEnCarrito.splice(index, 1);
+        */
+    }
+    
+    localStorage.setItem("libros-en-carrito", JSON.stringify(LibrosEnCarrito));
+    cargarProductosCarrito();
+}
+
+function aumentarCantidad(e) {
+    const idBoton = e.currentTarget.id;
+    const producto = LibrosEnCarrito.find(prod => prod.id === idBoton);
+    
+    producto.cantidad++;
+    
+    localStorage.setItem("libros-en-carrito", JSON.stringify(LibrosEnCarrito));
+    cargarProductosCarrito();
+}
+
+// Y aquí creas una función para actualizar los botones (igual que con eliminar)
+function actualizarBotonesCantidad() {
+    const botonesSustraer = document.querySelectorAll(".carrito-sustraer");
+    const botonesAgregar = document.querySelectorAll(".carrito-agregar");
+
+    botonesSustraer.forEach(boton => {
+        boton.addEventListener("click", disminuirCantidad);
+    });
+
+    botonesAgregar.forEach(boton => {
+        boton.addEventListener("click", aumentarCantidad);
+    });
 }

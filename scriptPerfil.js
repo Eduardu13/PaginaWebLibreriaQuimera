@@ -25,9 +25,12 @@ if (btnCerrarSesion) {
     });
 }
 // 3. Botón para Cambiar Contraseña
+// 3. Botón para Cambiar Contraseña
 const btnCambiarPass = document.getElementById('btnCambiarPass');
 if (btnCambiarPass) {
-    btnCambiarPass.addEventListener('click', async () => {
+    // ¡Fíjate que aquí dice "async" antes del paréntesis!
+    btnCambiarPass.addEventListener('click', async (e) => {
+        e.preventDefault();
         const nuevaPass = document.getElementById('nuevaPassword').value;
 
         if (!nuevaPass) {
@@ -35,14 +38,13 @@ if (btnCambiarPass) {
             return;
         }
 
-        // Empacamos el correo del usuario actual y su nueva contraseña
         const datos = {
             correo: usuarioActivo.correo,
             nuevaPassword: nuevaPass
         };
 
         try {
-            let respuesta = await fetch('https://localhost:7138/cambiar-password', {
+            let respuesta = await fetch('https://localhost:7270/api/cambiar-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datos)
@@ -51,7 +53,7 @@ if (btnCambiarPass) {
             let resultado = await respuesta.json();
             alert(resultado.mensaje);
             
-            document.getElementById('nuevaPassword').value = ""; // Limpiamos la cajita
+            document.getElementById('nuevaPassword').value = "";
             
         } catch (error) {
             console.error(error);
@@ -82,7 +84,7 @@ if (btnEliminarCuenta) {
         };
 
         try {
-            let respuesta = await fetch('https://localhost:7138/eliminar-cuenta', {
+            let respuesta = await fetch('https://localhost:7270/eliminar-cuenta', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datos)
@@ -104,4 +106,7 @@ if (btnEliminarCuenta) {
             alert("No se pudo conectar con el servidor.");
         }
     });
+
+   
+
 }

@@ -3156,26 +3156,30 @@
 let LibrosArray = [];
 
 // Llamamos a nuestro servidor en C# (Asegúrate de que el número 7138 sea tu puerto correcto)
-fetch('https://localhost:7138/obtener-productos') 
+// fetch('https://localhost:7138/obtener-productos') 
+
+fetch('https://localhost:7270/obtener-productos')
   .then(respuesta => respuesta.json())
   .then(datos => {
-      // 1. Guardamos los datos de la base de datos en nuestro arreglo
-      LibrosArray = datos; 
+      // Pasamos los datos directos y solo limpiamos el nombre de la categoría para tus botones
+      LibrosArray = datos.map(libro => ({
+          id: libro.id,
+          titulo: libro.titulo,
+          precio: libro.precio,
+          stock: libro.stock,
+          imagen: libro.imagen, 
+          autor: libro.autor,
+          categoria: {
+              nombre: libro.categoria,
+              id: libro.categoria.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/ /g, "")
+          }
+      }));
       
-      // 2. ¡MAGIA! Hasta que ya tenemos los libros reales, le decimos a la página que los dibuje
-      if (document.querySelector("#contenedor-productos")) {
-          cargarLibros(LibrosArray);
-      } else {
-          actualizarBotonesAgregar();
-      }
-      
-      // 3. Llenamos las tarjetas visuales
+      if (document.querySelector("#contenedor-productos")) cargarLibros(LibrosArray);
+      else actualizarBotonesAgregar();
       sincronizarTarjetasEstaticas();
   })
-  .catch(error => {
-      console.error("Algo falló al traer los libros desde C#:", error);
-  });
-
+  .catch(error => console.error("Error en C#:", error));
 
 
 // ----------------------------------------------------------------------------
@@ -3297,17 +3301,20 @@ function agregarAlCarrito(e){
 
     if (LibrosEnCarrito.some(producto => producto.id === idBoton)){
         const index = LibrosEnCarrito.findIndex(producto => producto.id === idBoton);
-        LibrosEnCarrito[index].cantidad++; //El array decta si es verdadero o falso y con cantidad lo va sumando
-   
+        LibrosEnCarrito[index].cantidad++; //El array detecta si es verdadero o falso y con cantidad lo va sumando
     }
     else {
-            libroAgregado.cantidad = 1;
-            LibrosEnCarrito.push(libroAgregado);
+        libroAgregado.cantidad = 1;
+        LibrosEnCarrito.push(libroAgregado);
     }
      
     actulizarNumerito();
 
     localStorage.setItem("libros-en-carrito", JSON.stringify(LibrosEnCarrito));
+
+    // --- ¡AQUÍ ESTÁ TU ALERTA MÁGICA! ---
+    // Usamos libroAgregado.titulo para que te diga exactamente qué libro compraste
+    alert(`¡"${libroAgregado.titulo}" se agregó a tu carrito correctamente!`);
 }
 
 function actulizarNumerito(){
@@ -3378,3 +3385,5 @@ function sincronizarTarjetasEstaticas() {
 }
 
 // sincronizarTarjetasEstaticas();
+
+
