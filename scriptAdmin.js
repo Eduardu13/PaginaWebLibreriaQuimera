@@ -20,6 +20,14 @@ const btnRecargarPedidos = document.getElementById("btnRecargarPedidos");
 const btnRecargarLibros = document.getElementById("btnRecargarLibros");
 const btnCerrarSesionAdmin = document.getElementById("btnCerrarSesionAdmin");
 
+const modalEditarLibro = document.getElementById("modalEditarLibro");
+const tituloModalEditar = document.getElementById("tituloModalEditar");
+const editarIdLibro = document.getElementById("editarIdLibro");
+const editarPrecioLibro = document.getElementById("editarPrecioLibro");
+const editarStockLibro = document.getElementById("editarStockLibro");
+const btnCancelarEdicion = document.getElementById("btnCancelarEdicion");
+const btnGuardarEdicionLibro = document.getElementById("btnGuardarEdicionLibro");
+
 let todosLosLibrosAdmin = [];
 
 function leerArchivoBase64(archivo) {
@@ -58,6 +66,85 @@ if (btnCerrarSesionAdmin) {
         if (confirm("¿Deseas cerrar la sesión de administrador?")) {
             localStorage.removeItem("usuarioQuimera");
             window.location.href = "index.html";
+        }
+    });
+}
+
+if (btnCancelarEdicion) {
+    btnCancelarEdicion.addEventListener("click", cerrarModalEditarLibro);
+}
+
+if (modalEditarLibro) {
+    modalEditarLibro.addEventListener("click", (e) => {
+        if (e.target === modalEditarLibro) cerrarModalEditarLibro();
+    });
+}
+
+function abrirModalEditarLibro(idLibro) {
+    const libro = todosLosLibrosAdmin.find(l => String(l.id) === String(idLibro));
+    if (!libro || !modalEditarLibro) return;
+
+    editarIdLibro.value = libro.id;
+    editarPrecioLibro.value = libro.precio;
+    editarStockLibro.value = libro.stock;
+    if (tituloModalEditar) {
+        tituloModalEditar.textContent = `Editar: ${libro.titulo}`;
+    }
+
+    modalEditarLibro.classList.add("abierto");
+}
+
+function cerrarModalEditarLibro() {
+    if (modalEditarLibro) {
+        modalEditarLibro.classList.remove("abierto");
+    }
+}
+
+if (btnGuardarEdicionLibro) {
+    btnGuardarEdicionLibro.addEventListener("click", async () => {
+        const id = editarIdLibro.value;
+        const nuevoPrecio = parseFloat(editarPrecioLibro.value);
+        const nuevoStock = parseInt(editarStockLibro.value, 10);
+
+        if (Number.isNaN(nuevoPrecio) || nuevoPrecio < 0) {
+            alert("Ingresa un precio válido.");
+            return;
+        }
+
+        if (Number.isNaN(nuevoStock) || nuevoStock < 0) {
+            alert("Ingresa un stock válido (0 o mayor).");
+            return;
+        }
+
+        try {
+            const resp = await fetch(`${API_ADMIN_URL}/api/admin/libros/${encodeURIComponent(id)}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    Precio: nuevoPrecio,
+                    Stock: nuevoStock
+                })
+            });
+
+            const texto = await resp.text();
+            let data = {};
+            try {
+                data = JSON.parse(texto);
+            } catch {
+                data = { mensaje: texto || `Error HTTP ${resp.status}` };
+            }
+
+            if (!resp.ok) {
+                alert(data.mensaje || `No se pudo actualizar el libro (HTTP ${resp.status}).`);
+                return;
+            }
+
+            alert(data.mensaje || "Libro actualizado correctamente.");
+            cerrarModalEditarLibro();
+            cargarLibrosAdmin();
+        } catch (err) {
+            console.error("Error editando libro:", err);
+            alert("Error de conexión al actualizar el libro.");
         }
     });
 }
@@ -320,11 +407,22 @@ function renderizarLibrosFiltrados() {
                 <br>
                 <small>ID: ${libro.id} | ${libro.categoria} | $${Number(libro.precio).toFixed(2)} | Stock: ${libro.stock}</small>
             </div>
-            <button type="button" class="btn-admin btn-peligro btn-eliminar-libro" data-id="${libro.id}" data-titulo="${libro.titulo}">
-                Eliminar
-            </button>
+            <div class="acciones-libro">
+                <button type="button" class="btn-admin btn-oscuro btn-editar-libro" data-id="${libro.id}">
+                    Editar
+                </button>
+                <button type="button" class="btn-admin btn-peligro btn-eliminar-libro" data-id="${libro.id}" data-titulo="${libro.titulo}">
+                    Eliminar
+                </button>
+            </div>
         </div>
     `).join("");
+
+    document.querySelectorAll(".btn-editar-libro").forEach(btn => {
+        btn.addEventListener("click", () => {
+            abrirModalEditarLibro(btn.dataset.id);
+        });
+    });
 
     document.querySelectorAll(".btn-eliminar-libro").forEach(btn => {
         btn.addEventListener("click", () => {

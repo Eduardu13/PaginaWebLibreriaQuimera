@@ -198,7 +198,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             background-color: var(--bg-suave);
             border: 1px solid var(--verde-borde);
             border-radius: 10px;
@@ -206,8 +206,28 @@
             margin-bottom: 10px;
         }
 
+        .item-libro > div:first-child {
+            flex: 1;
+            min-width: 0;
+        }
+
         .item-libro small {
             color: var(--texto-suave);
+        }
+
+        .acciones-libro {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 6px;
+            flex-shrink: 0;
+            min-width: 96px;
+        }
+
+        .acciones-libro .btn-admin {
+            width: 100%;
+            padding: 7px 12px;
+            white-space: nowrap;
         }
 
         .item-pedido {
@@ -230,6 +250,33 @@
             align-items: center;
             gap: 8px;
             flex-wrap: wrap;
+        }
+
+        .modal-edicion {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background-color: rgba(31, 53, 65, 0.55);
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 999;
+        }
+
+        .modal-edicion.abierto {
+            display: flex;
+        }
+
+        .caja-modal {
+            width: 100%;
+            max-width: 430px;
+        }
+
+        .acciones-modal {
+            margin-top: 18px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
         }
     </style>
 </head>
@@ -338,6 +385,30 @@
 
         </section>
     </main>
+
+    <div id="modalEditarLibro" class="modal-edicion">
+        <div class="tarjeta-admin caja-modal">
+            <h3 id="tituloModalEditar">Editar libro</h3>
+            <input type="hidden" id="editarIdLibro">
+
+            <div class="grid-formulario" style="grid-template-columns: 1fr;">
+                <div class="grupo-campo">
+                    <label for="editarPrecioLibro">Precio ($)</label>
+                    <input type="number" step="0.01" min="0" id="editarPrecioLibro" required>
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="editarStockLibro">Stock</label>
+                    <input type="number" min="0" id="editarStockLibro" required>
+                </div>
+            </div>
+
+            <div class="acciones-modal">
+                <button type="button" id="btnCancelarEdicion" class="btn-admin btn-claro">Cancelar</button>
+                <button type="button" id="btnGuardarEdicionLibro" class="btn-admin btn-primario">Guardar cambios</button>
+            </div>
+        </div>
+    </div>
 
     <script src="scriptAdmin.js"></script>
 </body>
