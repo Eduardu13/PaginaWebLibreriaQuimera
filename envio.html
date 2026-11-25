@@ -11,7 +11,6 @@
 
     <link rel="stylesheet" href="global.css">
     <link rel="stylesheet" href="stylecatalogo.css">
-    
 
     <!-- Iconos FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -23,90 +22,153 @@
          ========================================== -->
     <div class="ColorBarraDeActividades">
         <div class="BarraDeActividadesMargen">
-                <div class="FilaSuperior">
-                    <div class="LogoYTitulo">
-                        <img src="LechuzaLogo.png" class="logo" alt="Logo">
-                        <a href="index.html">    
-                            <h3 style="color: white"> Libreria <br> Quimera</h3>
-                        </a>
-                    </div>
-
-                    <div class="BuscadorHeader">
-                        <form>
-                            <input type="search" name="q" placeholder="Título, Autor o ISBN">
-                            <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
-                        </form>
-                    </div>
-
-                    <div class="AccionesUsuario">
-                        <a href="usuario.html" class="BotonUsuario">
-                            <i class="fa-solid fa-user"> </i> <span style="margin-left: 10px;">Mi cuenta</span>
-                        </a>
-
-                        <a href="carrito.html" class="BotonCarro">
-                            <i class="fa-solid fa-cart-arrow-down"> </i> <span style="margin-left: 10px;">Carrito </span> <span id="numerito" class="numerito"> 0 </span>
-                        </a>
-                    </div>
+            <div class="FilaSuperior">
+                <div class="LogoYTitulo">
+                    <img src="LechuzaLogo.png" class="logo" alt="Logo">
+                    <a href="index.html">
+                        <h3 style="color: white"> Libreria <br> Quimera</h3>
+                    </a>
                 </div>
 
-                <div class="FilaInferior">
-                    <nav class="BarraDeActividades">
-                        <a href="index.html">Inicio</a>
-                        <a href="ofertas.html" style="color: rgb(188, 2, 2);"><strong>¡Ofertas!</strong></a>
-                        <a href="catalogo.html">Catalogo</a>
-                        <a href="novedades.html">Novedades</a>
-                        <a href="contacto.html">Contacto</a>
-                    </nav>
+                <div class="BuscadorHeader">
+                    <form>
+                        <input type="search" name="q" placeholder="Título, Autor o ISBN">
+                        <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </form>
                 </div>
+
+                <div class="AccionesUsuario">
+                    <a href="usuario.html" class="BotonUsuario">
+                        <i class="fa-solid fa-user"> </i> <span style="margin-left: 10px;">Mi cuenta</span>
+                    </a>
+
+                    <a href="carrito.html" class="BotonCarro">
+                        <i class="fa-solid fa-cart-arrow-down"> </i> <span style="margin-left: 10px;">Carrito </span> <span id="numerito" class="numerito"> 0 </span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="FilaInferior">
+                <nav class="BarraDeActividades">
+                    <a href="index.html">Inicio</a>
+                    <a href="ofertas.html" style="color: rgb(188, 2, 2);"><strong>¡Ofertas!</strong></a>
+                    <a href="catalogo.html">Catalogo</a>
+                    <a href="novedades.html">Novedades</a>
+                    <a href="contacto.html">Contacto</a>
+                </nav>
+            </div>
         </div>
-    </div> 
+    </div>
 
     <!-- ==========================================
-         ZONA DE ENVÍO (Refactorizada con el estilo del Perfil)
+         ZONA DE ENVÍO
          ========================================== -->
     <div class="ContenedorPerfil">
-        
+
         <div class="CabeceraPerfil">
-            <!-- Icono de camión de envío -->
             <i class="fa-solid fa-truck-fast IconoPerfil"></i>
             <h2>Datos de Envío</h2>
         </div>
 
         <div class="TarjetaPerfil">
-            
-            <!-- Resumen de pago destacado -->
-            <div style="text-align: center; border-bottom: 2px dashed #EAEAEA; padding-bottom: 20px; margin-bottom: 25px;">
+
+            <!-- Resumen de pago y desglose de IVA / Envío -->
+            <div style="text-align: center; border-bottom: 2px dashed #EAEAEA; padding-bottom: 18px; margin-bottom: 22px;">
                 <h3 style="color: #c9302c; font-size: 1.8rem; margin: 0;" id="totalEnvio">Total a pagar: $0.00</h3>
-                <p style="color: #666; margin: 10px 0 0 0;">Por favor, llena tus datos para procesar el pedido.</p>
+                <p style="color: #666; margin: 8px 0 14px 0;">Por favor, llena tus datos para procesar el pedido.</p>
+
+                <div style="text-align: left; background: #fffde7; border: 1px solid #9DAA75; border-radius: 10px; padding: 12px 16px; color: #1f3541; font-size: 0.98rem; line-height: 1.6;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Subtotal de libros:</span>
+                        <strong id="subtotalLibros">$0.00</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>IVA (16%):</span>
+                        <strong id="montoIva">$0.00</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; color: #2e6b3e;">
+                        <span>Envío:</span>
+                        <strong>¡Envío gratis!</strong>
+                    </div>
+                    <hr style="border: none; border-top: 1px dashed #9DAA75; margin: 6px 0;">
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; color: #c9302c;">
+                        <span>Total con IVA:</span>
+                        <span id="totalConIvaTexto">$0.00</span>
+                    </div>
+                </div>
             </div>
 
-            <!-- Formulario limpio -->
-            <form id="formEnvio">
-                
+            <!-- Formulario de envío y pago visual -->
+            <form id="formEnvio" autocomplete="off">
+
                 <div class="GrupoInput">
-                    <label><i class="fa-solid fa-location-dot"></i> Dirección completa:</label>
+                    <label for="direccion"><i class="fa-solid fa-location-dot"></i> Dirección completa:</label>
                     <input type="text" id="direccion" placeholder="Ej. Calle Pino 123" required>
                 </div>
 
                 <div class="GrupoInput">
-                    <label><i class="fa-solid fa-city"></i> Ciudad / Municipio:</label>
+                    <label for="ciudad"><i class="fa-solid fa-city"></i> Ciudad / Municipio:</label>
                     <input type="text" id="ciudad" placeholder="Ej. Campeche, Campeche" required>
                 </div>
 
                 <div class="GrupoInput">
-                    <label><i class="fa-solid fa-envelopes-bulk"></i> Código Postal:</label>
+                    <label for="codigo_postal"><i class="fa-solid fa-envelopes-bulk"></i> Código Postal:</label>
                     <input type="text" id="codigo_postal" placeholder="Ej. 24000" required>
                 </div>
 
                 <div class="GrupoInput">
-                    <label><i class="fa-solid fa-phone"></i> Teléfono:</label>
+                    <label for="telefono_envio"><i class="fa-solid fa-phone"></i> Teléfono:</label>
                     <input type="text" id="telefono_envio" placeholder="A 10 dígitos" required>
                 </div>
-                
+
+                <!-- Selector de método de pago (solo visual) -->
+                <div class="GrupoInput">
+                    <label for="metodoPago"><i class="fa-solid fa-credit-card"></i> Método de pago:</label>
+                    <select id="metodoPago">
+                        <option value="tarjeta">Tarjeta de débito / crédito</option>
+                        <option value="transferencia">Transferencia bancaria</option>
+                    </select>
+                </div>
+
+                <!-- Campos visuales si elige Tarjeta -->
+                <div id="panelTarjeta" style="background: #f9faf5; border: 1px solid #9DAA75; border-radius: 10px; padding: 14px 16px; margin-bottom: 15px; color: #1f3541;">
+                    <p style="margin: 0 0 10px 0; font-weight: bold;">Datos de la tarjeta</p>
+
+                    <div class="GrupoInput">
+                        <label for="campoDigitosPago">Número:</label>
+                        <input type="text" id="campoDigitosPago" placeholder="1234 5678 9012 3456" maxlength="19" autocomplete="off">
+                    </div>
+
+                    <div class="GrupoInput">
+                        <label for="campoTitularPago">Titular:</label>
+                        <input type="text" id="campoTitularPago" placeholder="Nombre como aparece en el plástico" autocomplete="off">
+                    </div>
+
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <div class="GrupoInput" style="flex: 1; min-width: 130px;">
+                            <label for="campoMesAnoPago">Vigencia (MM/AA):</label>
+                            <input type="text" id="campoMesAnoPago" placeholder="MM/AA" maxlength="5" autocomplete="off">
+                        </div>
+                        <div class="GrupoInput" style="flex: 1; min-width: 110px;">
+                            <label for="campoCodigoSeguridad">Código de seguridad:</label>
+                            <input type="text" id="campoCodigoSeguridad" placeholder="123" maxlength="4" autocomplete="off">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Datos visuales si elige Transferencia -->
+                <div id="panelTransferencia" style="display: none; background: #fffde7; border: 1px solid #9DAA75; border-radius: 10px; padding: 14px 16px; margin-bottom: 15px; color: #1f3541; line-height: 1.6;">
+                    <p style="margin: 0 0 8px 0; font-weight: bold;">Datos para transferencia bancaria</p>
+                    <p style="margin: 0 0 4px 0;"><strong>Banco:</strong> BBVA México</p>
+                    <p style="margin: 0 0 4px 0;"><strong>Cuenta / CLABE:</strong> 012 180 01598765432 1</p>
+                    <p style="margin: 0 0 4px 0;"><strong>Concepto:</strong> Compra Librería Quimera</p>
+                    <p style="margin: 0;"><strong>Monto a transferir:</strong> <strong id="montoTransferencia">$0.00</strong> (Envío gratis)</p>
+                </div>
+
                 <button type="submit" class="BotonPerfil Primario" style="margin-top: 15px;">
                     <i class="fa-solid fa-check-circle"></i> Finalizar Compra
                 </button>
-                
+
             </form>
         </div>
     </div>

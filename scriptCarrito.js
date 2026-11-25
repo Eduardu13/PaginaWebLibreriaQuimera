@@ -173,7 +173,6 @@ function actualizarBotonesCantidad() {
 if (btnVerCompras) {
     btnVerCompras.addEventListener("click", cargarCompras);
 }
-
 async function cargarCompras() {
     const usuario = JSON.parse(localStorage.getItem("usuarioQuimera"));
     if (!usuario) {
@@ -181,12 +180,15 @@ async function cargarCompras() {
         return;
     }
 
-    const idUsuario = usuario.id_usuario || usuario.id;
+    const idUsuario = usuario.id_usuario ?? usuario.id;
     contenedorCompras.style.display = "block";
-    contenedorCompras.innerHTML = "<p>Cargando compras...</p>";
+    contenedorCompras.innerHTML = `
+        <div style="border: 1px solid #d4d4d4; padding: 24px; border-radius: 12px; margin-top: 12px; background: #ffffff; color: #1f3541; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+            <p style="margin: 0; font-size: 16px;">Cargando tus compras...</p>
+        </div>
+    `;
 
     try {
-        const idUsuario = usuario.id_usuario ?? usuario.id;
         const urlConsulta = idUsuario
             ? `${API_URL}/mis-compras/${idUsuario}`
             : `${API_URL}/mis-compras-correo/${encodeURIComponent(usuario.correo)}`;
@@ -199,24 +201,36 @@ async function cargarCompras() {
         const compras = await respuesta.json();
 
         if (!Array.isArray(compras) || compras.length === 0) {
-            contenedorCompras.innerHTML = "<p>No tienes compras registradas todavía.</p>";
+            contenedorCompras.innerHTML = `
+                <div style="border: 1px solid #d4d4d4; padding: 28px 24px; border-radius: 12px; margin-top: 12px; background: #ffffff; color: #1f3541; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+                    <i class="fa-solid fa-bag-shopping" style="font-size: 28px; color: #8fa464; margin-bottom: 10px; display: block;"></i>
+                    <p style="margin: 0 0 6px 0; font-size: 18px; font-weight: bold;">No tienes compras registradas todavía</p>
+                    <p style="margin: 0 0 16px 0; font-size: 15px; color: #555;">Cuando realices tu primer pedido en Librería Quimera, aparecerá aquí con todos sus detalles.</p>
+                    <a href="catalogo.html" style="display: inline-block; background: #1f3541; color: #ffffff; text-decoration: none; padding: 9px 18px; border-radius: 8px; font-family: 'Marcellus', serif; font-size: 14px;">
+                        Explorar catálogo
+                    </a>
+                </div>
+            `;
             return;
         }
 
+        const comprasEnOrden = compras.slice().sort((a, b) => a.idPedido - b.idPedido);
+
         contenedorCompras.innerHTML = "";
-        compras.forEach(compra => {
+        comprasEnOrden.forEach((compra, index) => {
+            const numeroPedido = index + 1;
             const esCancelado = compra.estado === "Cancelado";
             const librosConSalto = (compra.libros || "").split(" | ").join("<br>");
 
             contenedorCompras.innerHTML += `
-                <div style="border: 1px solid #ccc; padding: 14px; border-radius: 8px; margin-bottom: 10px; background: #fff; color: #111;">
-                    <p><strong>Pedido #${compra.idPedido}</strong> — <span style="color: ${esCancelado ? "red" : "green"};">${compra.estado}</span></p>
+                <div style="border: 1px solid #d4d4d4; padding: 20px 24px; border-radius: 12px; margin-top: 12px; margin-bottom: 12px; background: #ffffff; color: #1f3541; box-shadow: 0 2px 6px rgba(0,0,0,0.04); line-height: 1.6;">
+                    <p style="margin-top: 0;"><strong>Pedido #${numeroPedido}</strong> — <span style="color: ${esCancelado ? "#8b0000" : "#2e6b3e"}; font-weight: bold;">${compra.estado}</span></p>
                     <p><strong>Lo que pediste:</strong><br>${librosConSalto}</p>
                     <p><strong>Ciudad / Municipio:</strong> ${compra.ciudad}</p>
                     <p><strong>Dirección:</strong> ${compra.direccion}</p>
                     <p><strong>Total pagado:</strong> $${Number(compra.total).toFixed(2)}</p>
                     <p><strong>Estimado de llegada:</strong> ${compra.estimadoLlegada}</p>
-                    ${!esCancelado ? `<button type="button" class="btn-cancelar-compra" data-id="${compra.idPedido}" style="background: #8b0000; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer;">Cancelar compra</button>` : ""}
+                    ${!esCancelado ? `<button type="button" class="btn-cancelar-compra" data-id="${compra.idPedido}" style="background: #8b0000; color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-family: 'Marcellus', serif;">Cancelar compra</button>` : ""}
                 </div>
             `;
         });
@@ -226,9 +240,15 @@ async function cargarCompras() {
         });
     } catch (error) {
         console.error("Error en cargarCompras:", error);
-        contenedorCompras.innerHTML = "<p>Error al consultar tus compras.</p>";
+        contenedorCompras.innerHTML = `
+            <div style="border: 1px solid #d4d4d4; padding: 24px; border-radius: 12px; margin-top: 12px; background: #ffffff; color: #8b0000; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+                <p style="margin: 0; font-size: 16px;">No se pudieron cargar tus compras en este momento.</p>
+            </div>
+        `;
     }
 }
+
+      
 
 async function cancelarCompra(idPedido) {
     if (!confirm("¿Seguro que quieres cancelar esta compra?")) return;
