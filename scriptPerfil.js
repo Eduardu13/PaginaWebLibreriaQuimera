@@ -1,34 +1,32 @@
+const API_URL_PERFIL = "https://localhost:7270";
+
 // 1. Verificamos que el usuario esté logueado
 const usuarioActivo = JSON.parse(localStorage.getItem('usuarioQuimera'));
 
 if (!usuarioActivo) {
-    // Si no hay post-it de sesión, lo regresamos a que inicie sesión
     window.location.href = "usuario.html";
 } else {
-    // Le ponemos su nombre en la pantalla
-    document.getElementById('saludoPerfil').innerText = "Bienvenido, " + usuarioActivo.nombre;
+    const saludoInicial = document.getElementById('saludoPerfil');
+    if (saludoInicial) {
+        saludoInicial.innerText = "Bienvenido, " + usuarioActivo.nombre;
+    }
 }
-// 2. Botón para Cerrar Sesión (Ahora con pregunta)
+
+// 2. Botón para Cerrar Sesión
 const btnCerrarSesion = document.getElementById('btnCerrarSesion');
 if (btnCerrarSesion) {
     btnCerrarSesion.addEventListener('click', () => {
-        
-        // ¡NUEVO! Preguntamos antes de borrar la sesión
         let confirmacion = confirm("¿Estás seguro de que quieres cerrar sesión?");
-        
         if (confirmacion) {
-            // Si el usuario le dio a "Aceptar", borramos el post-it
             localStorage.removeItem('usuarioQuimera');
-            window.location.href = "index.html"; 
+            window.location.href = "index.html";
         }
-        // Si le da a "Cancelar", no hace nada y se queda en la página
     });
 }
-// 3. Botón para Cambiar Contraseña
+
 // 3. Botón para Cambiar Contraseña
 const btnCambiarPass = document.getElementById('btnCambiarPass');
 if (btnCambiarPass) {
-    // ¡Fíjate que aquí dice "async" antes del paréntesis!
     btnCambiarPass.addEventListener('click', async (e) => {
         e.preventDefault();
         const nuevaPass = document.getElementById('nuevaPassword').value;
@@ -44,7 +42,7 @@ if (btnCambiarPass) {
         };
 
         try {
-            let respuesta = await fetch('https://localhost:7270/api/cambiar-password', {
+            let respuesta = await fetch(`${API_URL_PERFIL}/api/cambiar-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datos)
@@ -52,15 +50,14 @@ if (btnCambiarPass) {
 
             let resultado = await respuesta.json();
             alert(resultado.mensaje);
-            
             document.getElementById('nuevaPassword').value = "";
-            
         } catch (error) {
             console.error(error);
             alert("No se pudo conectar con el servidor.");
         }
     });
 }
+
 // 4. Botón para Eliminar Cuenta
 const btnEliminarCuenta = document.getElementById('btnEliminarCuenta');
 if (btnEliminarCuenta) {
@@ -72,10 +69,9 @@ if (btnEliminarCuenta) {
             return;
         }
 
-        // Doble validación para evitar accidentes
         let confirmacionSegura = confirm("¿ESTÁS TOTALMENTE SEGURO? Esta acción no se puede deshacer.");
         if (!confirmacionSegura) {
-            return; // Si se arrepiente, cortamos la función aquí
+            return;
         }
 
         const datos = {
@@ -84,7 +80,7 @@ if (btnEliminarCuenta) {
         };
 
         try {
-            let respuesta = await fetch('https://localhost:7270/eliminar-cuenta', {
+            let respuesta = await fetch(`${API_URL_PERFIL}/eliminar-cuenta`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datos)
@@ -94,19 +90,145 @@ if (btnEliminarCuenta) {
 
             if (resultado.exito) {
                 alert(resultado.mensaje);
-                // Le arrancamos el post-it de sesión porque ya no existe
                 localStorage.removeItem('usuarioQuimera');
-                window.location.href = "index.html"; 
+                window.location.href = "index.html";
             } else {
                 alert(resultado.mensaje);
             }
-            
         } catch (error) {
             console.error(error);
             alert("No se pudo conectar con el servidor.");
         }
     });
-
-   
-
 }
+
+// 5. Cargar y guardar Datos Personales y de Envío
+function obtenerSesionQuimera() {
+    return JSON.parse(localStorage.getItem("usuarioQuimera"));
+}
+
+async function inicializarDatosPerfil() {
+    const sesion = obtenerSesionQuimera();
+    const idUsuario = sesion?.id_usuario ?? sesion?.id;
+    if (!sesion || !idUsuario) return;
+
+    let datos = { ...sesion };
+
+    try {
+        const resp = await fetch(`${API_URL_PERFIL}/api/perfil/${idUsuario}`);
+        if (resp.ok) {
+            const apiData = await resp.json();
+            datos = { ...datos, ...apiData };
+            localStorage.setItem("usuarioQuimera", JSON.stringify({
+                ...sesion,
+                ...apiData,
+                id: idUsuario,
+                id_usuario: idUsuario
+            }));
+        }
+    } catch (err) {
+        console.error("Error cargando perfil desde API:", err);
+    }
+
+    const saludo = document.getElementById("saludoPerfil");
+    if (saludo && datos.nombre) {
+        saludo.textContent = `Bienvenido, ${datos.nombre}`;
+    }
+
+    if (document.getElementById("perfilCorreo")) document.getElementById("perfilCorreo").value = datos.correo || "";
+    if (document.getElementById("perfilNombre")) document.getElementById("perfilNombre").value = datos.nombre || "";
+    if (document.getElementById("perfilApellido")) document.getElementById("perfilApellido").value = datos.apellido || "";
+    if (document.getElementById("perfilTelefono")) document.getElementById("perfilTelefono").value = datos.telefono || "";
+    if (document.getElementById("perfilDireccion")) document.getElementById("perfilDireccion").value = datos.direccion || "";
+    if (document.getElementById("perfilCiudad")) document.getElementById("perfilCiudad").value = datos.ciudad || "";
+    if (document.getElementById("perfilCP")) document.getElementById("perfilCP").value = datos.codigo_postal || "";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    inicializarDatosPerfil();
+
+    const formDatosPerfil = document.getElementById("formDatosPerfil");
+    if (formDatosPerfil) {
+        formDatosPerfil.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const sesion = obtenerSesionQuimera();
+            const idUsuario = sesion?.id_usuario ?? sesion?.id;
+            if (!idUsuario) return;
+
+            const nombre = document.getElementById("perfilNombre")?.value.trim() || "";
+            const apellido = document.getElementById("perfilApellido")?.value.trim() || "";
+            const telefono = document.getElementById("perfilTelefono")?.value.trim() || "";
+            const direccion = document.getElementById("perfilDireccion")?.value.trim() || "";
+            const ciudad = document.getElementById("perfilCiudad")?.value.trim() || "";
+            const codigoPostal = document.getElementById("perfilCP")?.value.trim() || "";
+
+            try {
+                const resp = await fetch(`${API_URL_PERFIL}/api/perfil/${idUsuario}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        Nombre: nombre,
+                        Apellido: apellido,
+                        Contrasena: "",
+                        Telefono: telefono,
+                        Direccion: direccion,
+                        Ciudad: ciudad,
+                        CodigoPostal: codigoPostal
+                    })
+                });
+
+                const data = await resp.json();
+                if (!resp.ok) {
+                    alert(data.mensaje || "No se pudieron guardar los cambios.");
+                    return;
+                }
+
+                const actualizada = {
+                    ...sesion,
+                    id: idUsuario,
+                    id_usuario: idUsuario,
+                    nombre,
+                    apellido,
+                    telefono,
+                    direccion,
+                    ciudad,
+                    codigo_postal: codigoPostal
+                };
+                localStorage.setItem("usuarioQuimera", JSON.stringify(actualizada));
+
+                const saludo = document.getElementById("saludoPerfil");
+                if (saludo) saludo.textContent = `Bienvenido, ${nombre}`;
+
+                alert("Datos actualizados correctamente.");
+            } catch (err) {
+                console.error("Error guardando datos del perfil:", err);
+                alert("Error de conexión al guardar tus datos.");
+            }
+        });
+    }
+
+    // Autocompletado en formularios de otras páginas si existen esos IDs
+    const u = obtenerSesionQuimera();
+    if (!u) return;
+
+    const asignaciones = [
+        [["nombre", "inputNombre", "txtNombre"], u.nombre],
+        [["apellido", "inputApellido", "txtApellido"], u.apellido],
+        [["correo", "email", "inputEmail", "txtCorreo"], u.correo],
+        [["telefono", "inputTelefono", "txtTelefono"], u.telefono],
+        [["direccion", "inputDireccion", "txtDireccion"], u.direccion],
+        [["ciudad", "municipio", "inputCiudad", "txtCiudad"], u.ciudad],
+        [["codigoPostal", "cp", "codigo_postal", "inputCP"], u.codigo_postal]
+    ];
+
+    asignaciones.forEach(([ids, valor]) => {
+        if (!valor) return;
+        ids.forEach(id => {
+            const campo = document.getElementById(id);
+            if (campo && !campo.value) {
+                campo.value = valor;
+            }
+        });
+    });
+});

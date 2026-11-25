@@ -69,13 +69,55 @@
             <h2 id="saludoPerfil">Mi Perfil</h2>
         </div>
 
+      <!-- Tarjeta de Datos Personales y de Envío -->
+        <form id="formDatosPerfil" class="TarjetaPerfil">
+            <h3><i class="fa-solid fa-address-card"></i> Datos Personales y de Envío</h3>
+
+            <div class="GrupoInput">
+                <label for="perfilCorreo">Correo electrónico (no editable)</label>
+                <input type="email" id="perfilCorreo" readonly style="background-color: #e9ece6; cursor: not-allowed; opacity: 0.85;">
+            </div>
+
+            <div class="GrupoInput">
+                <label for="perfilNombre">Nombre</label>
+                <input type="text" id="perfilNombre" placeholder="Tu nombre" required>
+            </div>
+
+            <div class="GrupoInput">
+                <label for="perfilApellido">Apellido</label>
+                <input type="text" id="perfilApellido" placeholder="Tu apellido" required>
+            </div>
+
+            <div class="GrupoInput">
+                <label for="perfilTelefono">Teléfono</label>
+                <input type="tel" id="perfilTelefono" placeholder="Ej. 981 123 4567" required>
+            </div>
+
+            <div class="GrupoInput">
+                <label for="perfilDireccion">Dirección</label>
+                <input type="text" id="perfilDireccion" placeholder="Calle, número, colonia" required>
+            </div>
+
+            <div class="GrupoInput">
+                <label for="perfilCiudad">Ciudad / Municipio</label>
+                <input type="text" id="perfilCiudad" placeholder="Ej. Campeche" required>
+            </div>
+
+            <div class="GrupoInput">
+                <label for="perfilCP">Código Postal</label>
+                <input type="text" id="perfilCP" placeholder="Ej. 24000" required>
+            </div>
+
+            <button type="submit" id="btnGuardarDatos" class="BotonPerfil Primario">Guardar Datos</button>
+        </form>
+
         <!-- Tarjeta de Contraseña -->
         <div class="TarjetaPerfil">
             <h3><i class="fa-solid fa-lock"></i> Cambiar Contraseña</h3>
             <div class="GrupoInput">
                 <input type="password" id="nuevaPassword" placeholder="Escribe tu nueva contraseña">
             </div>
-            <button id="btnCambiarPass" class="BotonPerfil Primario">Actualizar Contraseña</button>
+            <button type="button" id="btnCambiarPass" class="BotonPerfil Primario">Actualizar Contraseña</button>
         </div>
 
         <!-- Tarjeta de Peligro -->
@@ -85,10 +127,11 @@
             <div class="GrupoInput">
                 <input type="password" id="passEliminar" placeholder="Escribe tu contraseña">
             </div>
-            <button id="btnEliminarCuenta" class="BotonPerfil Secundario">Eliminar mi cuenta</button>
+            <button type="button" id="btnEliminarCuenta" class="BotonPerfil Secundario">Eliminar mi cuenta</button>
         </div>
+
         <!-- Botón de Cerrar Sesión -->
-        <button id="btnCerrarSesion" class="BotonCerrarSesion">
+        <button type="button" id="btnCerrarSesion" class="BotonCerrarSesion">
             <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesión
         </button>
     </div>

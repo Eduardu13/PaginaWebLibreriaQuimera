@@ -1,12 +1,13 @@
 const formEnvio = document.getElementById('formEnvio');
+const API_ENVIO_URL = 'https://localhost:7270';
 
 // =======================================================
-// 1. CALCULAR Y MOSTRAR EL TOTAL AL ABRIR LA PÁGINA
+// 1. CALCULAR TOTAL Y AUTOCOMPLETAR DATOS AL ABRIR LA PÁGINA
 // =======================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const carritoGuardado = JSON.parse(localStorage.getItem("libros-en-carrito"));
     let totalCalculado = 0;
-    
+
     if (carritoGuardado && carritoGuardado.length > 0) {
         carritoGuardado.forEach(libro => {
             totalCalculado += libro.precio * libro.cantidad;
@@ -16,10 +17,47 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = "index.html";
         return;
     }
-    
+
     const etiquetaTotal = document.getElementById('totalEnvio');
     if (etiquetaTotal) {
         etiquetaTotal.innerText = `Total a pagar: $${totalCalculado.toFixed(2)}`;
+    }
+
+    // Autocompletar dirección, ciudad, código postal y teléfono
+    let usuarioActivo = JSON.parse(localStorage.getItem('usuarioQuimera'));
+    const idUsuario = usuarioActivo?.id_usuario ?? usuarioActivo?.id;
+
+    if (idUsuario && (!usuarioActivo?.direccion || !usuarioActivo?.ciudad || !usuarioActivo?.codigo_postal || (!usuarioActivo?.telefono && !usuarioActivo?.telefoo_envio))) {
+        try {
+            const resp = await fetch(`${API_ENVIO_URL}/api/perfil/${idUsuario}`);
+            if (resp.ok) {
+                const perfil = await resp.json();
+                usuarioActivo = { ...usuarioActivo, ...perfil };
+                localStorage.setItem('usuarioQuimera', JSON.stringify(usuarioActivo));
+            }
+        } catch (err) {
+            console.error("Error obteniendo datos de envío:", err);
+        }
+    }
+
+    if (usuarioActivo) {
+        const inputDireccion = document.getElementById('direccion');
+        const inputCiudad = document.getElementById('ciudad');
+        const inputCP = document.getElementById('codigo_postal');
+        const inputTelefono = document.getElementById('telefono_envio');
+
+        if (inputDireccion && !inputDireccion.value) {
+            inputDireccion.value = usuarioActivo.direccion || "";
+        }
+        if (inputCiudad && !inputCiudad.value) {
+            inputCiudad.value = usuarioActivo.ciudad || "";
+        }
+        if (inputCP && !inputCP.value) {
+            inputCP.value = usuarioActivo.codigo_postal || "";
+        }
+        if (inputTelefono && !inputTelefono.value) {
+            inputTelefono.value = usuarioActivo.telefono || usuarioActivo.telefoo_envio || "";
+        }
     }
 });
 
@@ -31,15 +69,13 @@ if (formEnvio) {
         e.preventDefault();
 
         const usuarioActivo = JSON.parse(localStorage.getItem('usuarioQuimera'));
-        
-        // Calculamos el total nuevamente para enviarlo seguro
+
         const carritoGuardado = JSON.parse(localStorage.getItem("libros-en-carrito")) || [];
         let totalCalculado = 0;
         let carritoFormateado = [];
-        
+
         carritoGuardado.forEach(libro => {
             totalCalculado += libro.precio * libro.cantidad;
-            // Acomodamos los libros EXACTAMENTE como los pide la clase ItemCarrito de tu C#
             carritoFormateado.push({
                 IdLibro: libro.id,
                 Cantidad: libro.cantidad,
@@ -47,10 +83,9 @@ if (formEnvio) {
             });
         });
 
-        // Empaquetamos todo con los NOMBRES EXACTOS de tu clase CheckoutRequest de C#
+        const idUsuario = usuarioActivo?.id_usuario ?? usuarioActivo?.id;
         const datosEnvio = {
-            // Si por alguna razón el id_usuario no está en el localStorage, le ponemos 1 por defecto para que no falle
-            IdUsuario: usuarioActivo.id_usuario ? parseInt(usuarioActivo.id_usuario) : 1, 
+            IdUsuario: idUsuario ? parseInt(idUsuario) : 1,
             Total: totalCalculado,
             Direccion: document.getElementById('direccion').value,
             Ciudad: document.getElementById('ciudad').value,
@@ -60,8 +95,7 @@ if (formEnvio) {
         };
 
         try {
-            // ¡Cambiamos la ruta a /api/checkout y actualizamos al puerto 7270!
-            let respuesta = await fetch('https://localhost:7270/api/checkout', {
+            let respuesta = await fetch(`${API_ENVIO_URL}/api/checkout`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datosEnvio)

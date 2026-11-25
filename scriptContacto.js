@@ -4,9 +4,29 @@ const formContacto = document.getElementById('formContacto');
 const usuarioActivo = JSON.parse(localStorage.getItem('usuarioQuimera'));
 
 if (usuarioActivo) {
-    if(document.getElementById('contactoNombre')) {
-        document.getElementById('contactoNombre').value = usuarioActivo.nombre;
-        document.getElementById('contactoCorreo').value = usuarioActivo.correo;
+    if (document.getElementById('contactoNombre')) {
+        document.getElementById('contactoNombre').value = usuarioActivo.nombre || "";
+        document.getElementById('contactoCorreo').value = usuarioActivo.correo || "";
+
+        const tel = document.getElementById('contactoTelefono') || document.getElementById('telefono');
+        if (tel) {
+            tel.value = usuarioActivo.telefono || usuarioActivo.telefoo_envio || "";
+        }
+
+        const dir = document.getElementById('contactoDireccion') || document.getElementById('direccion');
+        if (dir) {
+            dir.value = usuarioActivo.direccion || "";
+        }
+
+        const ciu = document.getElementById('contactoCiudad') || document.getElementById('ciudad');
+        if (ciu) {
+            ciu.value = usuarioActivo.ciudad || "";
+        }
+
+        const cp = document.getElementById('contactoCP') || document.getElementById('cp');
+        if (cp) {
+            cp.value = usuarioActivo.codigo_postal || "";
+        }
     }
 }
 

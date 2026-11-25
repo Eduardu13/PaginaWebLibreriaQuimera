@@ -247,3 +247,7 @@ async function cancelarCompra(idPedido) {
         alert("No se pudo conectar con el servidor.");
     }
 }
+
+
+
+
