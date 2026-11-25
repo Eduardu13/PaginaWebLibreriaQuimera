@@ -13,6 +13,10 @@
 
     <link rel="stylesheet" href="stylecatalogo.css">
 
+    <!-- Dentro de <head> -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 
    <!-- Css global -->
     <link rel="stylesheet" href="global.css">
@@ -65,42 +69,267 @@
         </div>
     </div>    
 
+
+
     <table width="900" align="center" border="0" cellspacing="20">
         <tr>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-             <center><p>Calle 57 #6, entre Calle 8 y Calle 10, Colonia San Francisco de Campeche</p></center>
-            <br>
-            <br>
             
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            
+            <section style="max-width: 960px; width: calc(100% - 40px); margin: 30px auto; padding: 24px 28px; background: #fffde7; border: 1px solid #9DAA75; border-radius: 12px; color: #1f3541; box-sizing: border-box;">
+    <h2 style="margin-bottom: 10px; font-size: 26px;">Centros de Recolección en Todo México</h2>
+    <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.5;">
+        ¿No estabas en tu domicilio cuando pasó el repartidor? Elige un estado para ver sus 2 centros de recolección disponibles y recoger tu pedido:
+    </p>
+
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px;">
+        <label for="selectorEstado" style="font-size: 17px; font-weight: bold;">Estado:</label>
+        <select id="selectorEstado" style="padding: 9px 14px; font-size: 16px; border-radius: 8px; border: 1px solid #9DAA75; background: #ffffff; color: #1f3541; font-family: 'Marcellus', serif; cursor: pointer;">
+        </select>
+
+        <button id="btnMostrarTodosEstados" type="button" style="padding: 9px 16px; background: #4f0802; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-family: 'Marcellus', serif; font-size: 15px;">
+            Ver todo México (64 puntos)
+        </button>
+    </div>
+
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px;" id="botonesCentros"></div>
+
+    <div id="mapaRecoleccion" style="height: 350px; width: 100%; border-radius: 10px; border: 1px solid #ccc;"></div>
+
+    <div id="detalleCentro" style="margin-top: 16px; padding: 16px; background: #ffffff; border-radius: 10px; border: 1px solid #d4d4d4; font-size: 17px; line-height: 1.5;">
+        Selecciona un estado, un marcador o un botón para ver los datos del centro de recolección.
+    </div>
+</section>
+
+
+
+        <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const mapaEl = document.getElementById("mapaRecoleccion");
+            if (!mapaEl || typeof L === "undefined") return;
+
+            const centrosRecoleccion = [
+                // 1. Aguascalientes
+                { estado: "Aguascalientes", nombre: "Quimera Aguascalientes Centro", lat: 21.8818, lng: -102.2960, direccion: "Av. Francisco I. Madero #215, Zona Centro, Aguascalientes", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta tu folio de pedido e identificación." },
+                { estado: "Aguascalientes", nombre: "Quimera Aguascalientes Norte", lat: 21.9260, lng: -102.2885, direccion: "Av. Universidad #1002, Bosques del Prado Norte", horario: "Lun a Dom 10:00 - 21:00", instrucciones: "Resguardo disponible hasta por 5 días hábiles." },
+
+                // 2. Baja California
+                { estado: "Baja California", nombre: "Quimera Tijuana Zona Río", lat: 32.5290, lng: -117.0220, direccion: "Paseo de los Héroes #940, Zona Urbana Río, Tijuana", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Disponible 24 horas tras intento de entrega." },
+                { estado: "Baja California", nombre: "Quimera Mexicali Centro Cívico", lat: 32.6467, lng: -115.4694, direccion: "Calz. Independencia #1120, Centro Cívico, Mexicali", horario: "Lun a Vie 9:00 - 19:00", instrucciones: "Presenta identificación oficial y número de pedido." },
+
+                // 3. Baja California Sur
+                { estado: "Baja California Sur", nombre: "Quimera La Paz Malecón", lat: 24.1426, lng: -110.3128, direccion: "Paseo Álvaro Obregón #450, Zona Centro, La Paz", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Entrega directa en mostrador de paquetes." },
+                { estado: "Baja California Sur", nombre: "Quimera Cabo San Lucas Marina", lat: 22.8905, lng: -109.9167, direccion: "Blvd. Paseo de la Marina #310, Centro, Cabo San Lucas", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Resguardo hasta por 5 días hábiles." },
+
+                // 4. Campeche
+                { estado: "Campeche", nombre: "Quimera Campeche Centro", lat: 19.8454, lng: -90.5356, direccion: "Calle 59 #12, Zona Centro, San Francisco de Campeche", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta tu número de pedido e identificación." },
+                { estado: "Campeche", nombre: "Quimera Ciudad del Carmen", lat: 18.6400, lng: -91.8340, direccion: "Calle 22 #85, Col. Centro, Ciudad del Carmen", horario: "Lun a Sáb 9:30 - 19:30", instrucciones: "Disponible tras notificación de entrega pendiente." },
+
+                // 5. Chiapas
+                { estado: "Chiapas", nombre: "Quimera Tuxtla Gutiérrez Centro", lat: 16.7516, lng: -93.1161, direccion: "Av. Central Pte. #540, Col. Centro, Tuxtla Gutiérrez", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta folio de compra e identificación." },
+                { estado: "Chiapas", nombre: "Quimera San Cristóbal", lat: 16.7370, lng: -92.6376, direccion: "Real de Guadalupe #68, Barrio de Guadalupe, San Cristóbal", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Resguardo hasta por 5 días hábiles." },
+
+                // 6. Chihuahua
+                { estado: "Chihuahua", nombre: "Quimera Chihuahua Centro", lat: 28.6353, lng: -106.0889, direccion: "Av. Independencia #1204, Zona Centro, Chihuahua", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Entrega con folio y credencial vigente." },
+                { estado: "Chihuahua", nombre: "Quimera Ciudad Juárez", lat: 31.7400, lng: -106.4800, direccion: "Av. Tomás Fernández #8420, Partido Iglesias, Cd. Juárez", horario: "Lun a Sáb 9:30 - 19:30", instrucciones: "Disponible 24 horas después del aviso de visita." },
+
+                // 7. Ciudad de México
+                { estado: "Ciudad de México", nombre: "Quimera CDMX Centro Histórico", lat: 19.4326, lng: -99.1332, direccion: "Av. 5 de Mayo #34, Centro Histórico, Cuauhtémoc", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Módulo de recolección con número de pedido." },
+                { estado: "Ciudad de México", nombre: "Quimera CDMX Roma / Condesa", lat: 19.4150, lng: -99.1650, direccion: "Av. Álvaro Obregón #185, Col. Roma Norte, Cuauhtémoc", horario: "Lun a Sáb 9:30 - 20:30", instrucciones: "Resguardo hasta por 5 días hábiles." },
+
+                // 8. Coahuila
+                { estado: "Coahuila", nombre: "Quimera Saltillo Centro", lat: 25.4232, lng: -101.0053, direccion: "Calle Victoria #412, Zona Centro, Saltillo", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Presenta tu folio e identificación oficial." },
+                { estado: "Coahuila", nombre: "Quimera Torreón Morelos", lat: 25.5428, lng: -103.4068, direccion: "Av. Morelos #1350 Pte., Col. Centro, Torreón", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Disponible tras intento de entrega en domicilio." },
+
+                // 9. Colima
+                { estado: "Colima", nombre: "Quimera Colima Jardín Libertad", lat: 19.2433, lng: -103.7240, direccion: "Portal Medellín #78, Centro, Colima", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Entrega con número de pedido e identificación." },
+                { estado: "Colima", nombre: "Quimera Manzanillo Centro", lat: 19.0522, lng: -104.3160, direccion: "Av. México #240, Col. Centro, Manzanillo", horario: "Lun a Sáb 9:30 - 19:00", instrucciones: "Resguardo hasta por 5 días hábiles." },
+
+                // 10. Durango
+                { estado: "Durango", nombre: "Quimera Durango Centro", lat: 24.0277, lng: -104.6532, direccion: "Calle 20 de Noviembre #310 Ote., Zona Centro, Durango", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Presenta tu folio de pedido e identificación." },
+                { estado: "Durango", nombre: "Quimera Gómez Palacio", lat: 25.5610, lng: -103.4980, direccion: "Av. Hidalgo #405 Nte., Zona Centro, Gómez Palacio", horario: "Lun a Vie 9:00 - 19:00", instrucciones: "Disponible 24 horas tras aviso de entrega." },
+
+                // 11. Estado de México
+                { estado: "Estado de México", nombre: "Quimera Toluca Centro", lat: 19.2826, lng: -99.6557, direccion: "Av. Sebastián Lerdo de Tejada #210, Centro, Toluca", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Muestra tu folio e identificación oficial." },
+                { estado: "Estado de México", nombre: "Quimera Satélite / Naucalpan", lat: 19.5100, lng: -99.2340, direccion: "Circuito Centro Comercial #120, Cd. Satélite, Naucalpan", horario: "Lun a Dom 10:00 - 20:30", instrucciones: "Resguardo disponible hasta por 5 días hábiles." },
+
+                // 12. Guanajuato
+                { estado: "Guanajuato", nombre: "Quimera Guanajuato Centro", lat: 21.0190, lng: -101.2574, direccion: "Calle Alonso #45, Zona Centro, Guanajuato", horario: "Lun a Sáb 9:30 - 20:00", instrucciones: "Entrega directa con número de pedido." },
+                { estado: "Guanajuato", nombre: "Quimera León Zona Centro", lat: 21.1221, lng: -101.6826, direccion: "Blvd. Adolfo López Mateos #512, Centro, León", horario: "Lun a Dom 10:00 - 20:30", instrucciones: "Presenta identificación oficial y folio." },
+
+                // 13. Guerrero
+                { estado: "Guerrero", nombre: "Quimera Chilpancingo Centro", lat: 17.5506, lng: -99.5024, direccion: "Calle Ignacio Zaragoza #28, Centro, Chilpancingo", horario: "Lun a Sáb 9:00 - 19:00", instrucciones: "Disponible tras notificación de entrega." },
+                { estado: "Guerrero", nombre: "Quimera Acapulco Costera", lat: 16.8636, lng: -99.8824, direccion: "Av. Costera Miguel Alemán #1420, Fracc. Magallanes, Acapulco", horario: "Lun a Sáb 9:30 - 20:00", instrucciones: "Resguardo hasta por 5 días hábiles." },
+
+                // 14. Hidalgo
+                { estado: "Hidalgo", nombre: "Quimera Pachuca Centro", lat: 20.1200, lng: -98.7330, direccion: "Calle Vicente Guerrero #118, Centro, Pachuca", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Presenta tu número de pedido e identificación." },
+                { estado: "Hidalgo", nombre: "Quimera Pachuca Zona Plateada", lat: 20.1020, lng: -98.7620, direccion: "Blvd. Felipe Ángeles #2100, Zona Plateada, Pachuca", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Entrega con folio de compra vigente." },
+
+                // 15. Jalisco
+                { estado: "Jalisco", nombre: "Quimera Guadalajara Centro", lat: 20.6767, lng: -103.3475, direccion: "Av. Juárez #320, Zona Centro, Guadalajara", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta folio e identificación oficial." },
+                { estado: "Jalisco", nombre: "Quimera Zapopan / Providencia", lat: 20.6920, lng: -103.3820, direccion: "Av. Terranova #640, Col. Providencia, Guadalajara / Zapopan", horario: "Lun a Dom 10:00 - 20:30", instrucciones: "Resguardo hasta por 5 días hábiles." },
+
+                // 16. Michoacán
+                { estado: "Michoacán", nombre: "Quimera Morelia Centro", lat: 19.7060, lng: -101.1950, direccion: "Av. Francisco I. Madero Pte. #490, Centro, Morelia", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Entrega con número de pedido e identificación." },
+                { estado: "Michoacán", nombre: "Quimera Uruapan Centro", lat: 19.4140, lng: -102.0560, direccion: "Portal Carrillo #22, Centro, Uruapan", horario: "Lun a Sáb 9:30 - 19:00", instrucciones: "Disponible 24 horas después del aviso." },
+
+                // 17. Morelos
+                { estado: "Morelos", nombre: "Quimera Cuernavaca Centro", lat: 18.9242, lng: -99.2216, direccion: "Calle Guerrero #104, Centro, Cuernavaca", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Presenta folio de compra e identificación." },
+                { estado: "Morelos", nombre: "Quimera Cuernavaca Norte", lat: 18.9580, lng: -99.2340, direccion: "Av. Emiliano Zapata #720, Col. Tlaltenango, Cuernavaca", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Resguardo hasta por 5 días hábiles." },
+
+                // 18. Nayarit
+                { estado: "Nayarit", nombre: "Quimera Tepic Centro", lat: 21.5042, lng: -104.8946, direccion: "Av. México Nte. #265, Zona Centro, Tepic", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Entrega con número de pedido e identificación." },
+                { estado: "Nayarit", nombre: "Quimera Tepic Forum / Sur", lat: 21.4820, lng: -104.8760, direccion: "Blvd. Luis Donaldo Colosio #1520, Tepic", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Disponible tras notificación de entrega." },
+
+                // 19. Nuevo León
+                { estado: "Nuevo León", nombre: "Quimera Monterrey Centro", lat: 25.6714, lng: -100.3095, direccion: "Calle Morelos #580, Zona Centro, Monterrey", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta tu folio de pedido e identificación." },
+                { estado: "Nuevo León", nombre: "Quimera San Pedro / Valle", lat: 25.6570, lng: -100.3680, direccion: "Av. Vasconcelos #410 Ote., Del Valle, San Pedro Garza García", horario: "Lun a Dom 10:00 - 20:30", instrucciones: "Resguardo disponible hasta por 5 días hábiles." },
+
+                // 20. Oaxaca
+                { estado: "Oaxaca", nombre: "Quimera Oaxaca Centro", lat: 17.0654, lng: -96.7236, direccion: "Calle Macedonio Alcalá #305, Centro, Oaxaca de Juárez", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Entrega con folio e identificación oficial." },
+                { estado: "Oaxaca", nombre: "Quimera Oaxaca Jalatlaco", lat: 17.0710, lng: -96.7120, direccion: "Calle Aldama #118, Barrio de Jalatlaco, Oaxaca", horario: "Lun a Dom 10:00 - 19:30", instrucciones: "Disponible 24 horas después del intento de entrega." },
+
+                // 21. Puebla
+                { estado: "Puebla", nombre: "Quimera Puebla Centro Histórico", lat: 19.0414, lng: -98.2063, direccion: "Calle 5 de Mayo #412, Centro Histórico, Puebla", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta tu número de pedido e identificación." },
+                { estado: "Puebla", nombre: "Quimera Puebla Angelópolis", lat: 19.0180, lng: -98.2480, direccion: "Blvd. del Niño Poblano #2510, Reserva Territorial Atlixcáyotl, Puebla", horario: "Lun a Dom 10:00 - 20:30", instrucciones: "Resguardo hasta por 5 días hábiles." },
+
+                // 22. Querétaro
+                { estado: "Querétaro", nombre: "Quimera Querétaro Centro", lat: 20.5888, lng: -100.3899, direccion: "Calle 5 de Mayo #76, Centro Histórico, Santiago de Querétaro", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Entrega con folio e identificación oficial." },
+                { estado: "Querétaro", nombre: "Quimera Querétaro Juriquilla", lat: 20.7130, lng: -100.4480, direccion: "Blvd. Villas del Mesón #890, Juriquilla, Querétaro", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Disponible tras notificación de entrega." },
+
+                // 23. Quintana Roo
+                { estado: "Quintana Roo", nombre: "Quimera Cancún Centro", lat: 21.1619, lng: -86.8515, direccion: "Av. Tulum #220, Supermanzana 22, Cancún", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta folio de pedido e identificación." },
+                { estado: "Quintana Roo", nombre: "Quimera Playa del Carmen", lat: 20.6296, lng: -87.0739, direccion: "Av. 10 entre Calles 12 y 14, Centro, Playa del Carmen", horario: "Lun a Dom 10:00 - 20:30", instrucciones: "Resguardo hasta por 5 días hábiles." },
+
+                // 24. San Luis Potosí
+                { estado: "San Luis Potosí", nombre: "Quimera SLP Centro", lat: 22.1565, lng: -100.9855, direccion: "Calle Zaragoza #340, Zona Centro, San Luis Potosí", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Entrega directa con número de pedido." },
+                { estado: "San Luis Potosí", nombre: "Quimera SLP Lomas", lat: 22.1380, lng: -101.0240, direccion: "Av. Himno Nacional #4120, Lomas 2da Sección, SLP", horario: "Lun a Sáb 9:30 - 19:30", instrucciones: "Disponible 24 horas tras aviso de visita." },
+
+                // 25. Sinaloa
+                { estado: "Sinaloa", nombre: "Quimera Culiacán Centro", lat: 24.8091, lng: -107.3940, direccion: "Av. Álvaro Obregón #610 Nte., Centro, Culiacán", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Presenta folio e identificación oficial." },
+                { estado: "Sinaloa", nombre: "Quimera Mazatlán Zona Dorada", lat: 23.2494, lng: -106.4111, direccion: "Av. Camarón Sábalo #520, Zona Dorada, Mazatlán", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Resguardo hasta por 5 días hábiles." },
+
+                // 26. Sonora
+                { estado: "Sonora", nombre: "Quimera Hermosillo Centro", lat: 29.0729, lng: -110.9559, direccion: "Blvd. Luis Encinas #280, Col. Centro, Hermosillo", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Entrega con número de pedido e identificación." },
+                { estado: "Sonora", nombre: "Quimera Ciudad Obregón", lat: 27.4828, lng: -109.9304, direccion: "Calle Miguel Alemán #415 Nte., Centro, Cd. Obregón", horario: "Lun a Sáb 9:00 - 19:00", instrucciones: "Disponible tras notificación de entrega." },
+
+                // 27. Tabasco
+                { estado: "Tabasco", nombre: "Quimera Villahermosa Tabasco 2000", lat: 17.9940, lng: -92.9310, direccion: "Av. Paseo Tabasco #1204, Tabasco 2000, Villahermosa", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta tu folio e identificación oficial." },
+                { estado: "Tabasco", nombre: "Quimera Villahermosa Centro", lat: 17.9892, lng: -92.9175, direccion: "Calle Juárez #312, Zona Centro, Villahermosa", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Resguardo disponible hasta por 5 días hábiles." },
+
+                // 28. Tamaulipas
+                { estado: "Tamaulipas", nombre: "Quimera Tampico Centro", lat: 22.2153, lng: -97.8569, direccion: "Calle Salvador Díaz Mirón #210 Ote., Zona Centro, Tampico", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Entrega con folio de pedido e identificación." },
+                { estado: "Tamaulipas", nombre: "Quimera Ciudad Victoria", lat: 23.7369, lng: -99.1411, direccion: "Calle 17 Hidalgo y Juárez #145, Zona Centro, Cd. Victoria", horario: "Lun a Vie 9:00 - 19:00", instrucciones: "Disponible 24 horas después del aviso." },
+
+                // 29. Tlaxcala
+                { estado: "Tlaxcala", nombre: "Quimera Tlaxcala Centro", lat: 19.3182, lng: -98.2375, direccion: "Plaza de la Constitución #14, Centro, Tlaxcala", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Presenta número de pedido e identificación." },
+                { estado: "Tlaxcala", nombre: "Quimera Apizaco Centro", lat: 19.4136, lng: -98.1419, direccion: "Av. Cuauhtémoc #308, Centro, Apizaco", horario: "Lun a Sáb 9:30 - 19:00", instrucciones: "Resguardo hasta por 5 días hábiles." },
+
+                // 30. Veracruz
+                { estado: "Veracruz", nombre: "Quimera Xalapa Centro", lat: 19.5438, lng: -96.9102, direccion: "Calle Enríquez #92, Zona Centro, Xalapa", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Entrega con folio e identificación oficial." },
+                { estado: "Veracruz", nombre: "Quimera Veracruz Puerto / Boca", lat: 19.1738, lng: -96.1342, direccion: "Av. Salvador Díaz Mirón #1540, Moderno, Veracruz", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Disponible tras notificación de entrega." },
+
+                // 31. Yucatán
+                { estado: "Yucatán", nombre: "Quimera Mérida Centro", lat: 20.9674, lng: -89.6243, direccion: "Calle 60 #482, Centro, Mérida, Yucatán", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta tu número de pedido e identificación." },
+                { estado: "Yucatán", nombre: "Quimera Mérida Norte / Montejo", lat: 21.0120, lng: -89.6150, direccion: "Paseo de Montejo #465, Itzimná, Mérida, Yucatán", horario: "Lun a Dom 10:00 - 20:30", instrucciones: "Resguardo disponible hasta por 5 días hábiles." },
+
+                // 32. Zacatecas
+                { estado: "Zacatecas", nombre: "Quimera Zacatecas Centro", lat: 22.7709, lng: -102.5832, direccion: "Av. Hidalgo #422, Centro Histórico, Zacatecas", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Entrega con folio e identificación oficial." },
+                { estado: "Zacatecas", nombre: "Quimera Guadalupe Zacatecas", lat: 22.7520, lng: -102.5100, direccion: "Av. Colegio Militar #215, Centro, Guadalupe, Zacatecas", horario: "Lun a Sáb 9:30 - 19:00", instrucciones: "Disponible 24 horas después del aviso." }
+            ];
+
+            const map = L.map("mapaRecoleccion").setView([19.8454, -90.5356], 12);
+
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "&copy; OpenStreetMap"
+            }).addTo(map);
+
+            const selectorEstado = document.getElementById("selectorEstado");
+            const btnMostrarTodos = document.getElementById("btnMostrarTodosEstados");
+            const botonesContenedor = document.getElementById("botonesCentros");
+            const detalleContenedor = document.getElementById("detalleCentro");
+            const capaMarcadores = L.layerGroup().addTo(map);
+
+            const estadosUnicos = [...new Set(centrosRecoleccion.map(c => c.estado))];
+            estadosUnicos.forEach(estado => {
+                const option = document.createElement("option");
+                option.value = estado;
+                option.textContent = estado;
+                selectorEstado.appendChild(option);
+            });
+
+            function seleccionarCentro(centro, marcador) {
+                map.setView([centro.lat, centro.lng], 14);
+                if (marcador) marcador.openPopup();
+                detalleContenedor.innerHTML = `
+                    <p style="margin-bottom: 6px; font-size: 18px;"><strong>${centro.nombre}</strong> (${centro.estado})</p>
+                    <p style="margin-bottom: 6px; font-size: 17px;"><strong>Dirección:</strong> ${centro.direccion}</p>
+                    <p style="margin-bottom: 6px; font-size: 17px;"><strong>Horario:</strong> ${centro.horario}</p>
+                    <p style="margin-bottom: 0; font-size: 17px;"><strong>Indicaciones:</strong> ${centro.instrucciones}</p>
+                `;
+            }
+
+            function renderizarCentros(lista, zoomNivel = 13) {
+                capaMarcadores.clearLayers();
+                botonesContenedor.innerHTML = "";
+
+                if (!lista.length) return;
+
+                const bounds = [];
+
+                lista.forEach(centro => {
+                    const marcador = L.marker([centro.lat, centro.lng]).addTo(capaMarcadores);
+                    marcador.bindPopup(`<strong>${centro.nombre}</strong><br>${centro.estado}<br>${centro.direccion}`);
+                    marcador.on("click", () => seleccionarCentro(centro, marcador));
+                    bounds.push([centro.lat, centro.lng]);
+
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.textContent = centro.nombre;
+                    btn.style.cssText = "padding: 10px 16px; background: #1f3541; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-family: 'Marcellus', serif; font-size: 16px;";
+                    btn.addEventListener("click", () => seleccionarCentro(centro, marcador));
+                    botonesContenedor.appendChild(btn);
+                });
+
+                if (bounds.length > 1) {
+                    map.fitBounds(bounds, { padding: [35, 35], maxZoom: zoomNivel });
+                } else {
+                    map.setView(bounds[0], zoomNivel);
+                }
+            }
+
+            selectorEstado.addEventListener("change", () => {
+                const filtrados = centrosRecoleccion.filter(c => c.estado === selectorEstado.value);
+                renderizarCentros(filtrados, 13);
+                if (filtrados[0]) {
+                    seleccionarCentro(filtrados[0], null);
+                }
+            });
+
+            btnMostrarTodos.addEventListener("click", () => {
+                botonesContenedor.innerHTML = `<span style="font-size: 16px; color: #1f3541;">Mostrando los 64 centros en todo México. Haz clic en cualquier marcador del mapa para ver sus datos.</span>`;
+                capaMarcadores.clearLayers();
+                const bounds = [];
+
+                centrosRecoleccion.forEach(centro => {
+                    const marcador = L.marker([centro.lat, centro.lng]).addTo(capaMarcadores);
+                    marcador.bindPopup(`<strong>${centro.nombre}</strong><br>${centro.estado}<br>${centro.direccion}`);
+                    marcador.on("click", () => seleccionarCentro(centro, marcador));
+                    bounds.push([centro.lat, centro.lng]);
+                });
+
+                map.fitBounds(bounds, { padding: [25, 25], maxZoom: 6 });
+            });
+
+            // Inicia en Campeche por defecto (2 centros)
+            selectorEstado.value = "Campeche";
+            const iniciales = centrosRecoleccion.filter(c => c.estado === "Campeche");
+            renderizarCentros(iniciales, 13);
+            if (iniciales[0]) {
+                seleccionarCentro(iniciales[0], null);
+            }
+        });
+        </script>
+
+
             <td width="40%" valign="top">
                 <p>Usa nuestro formulario de contacto, también ponemos a tu disposición otros canales de comunicación.</p>
                 
@@ -130,12 +359,36 @@
                     <textarea id="contactoMensaje" placeholder="Mensaje" rows="6" required></textarea>
 
                     <br><br>
-                    <input type="submit" value="Enviar">
+                    
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 12px;"></div>
+                        <input type="submit" value="Enviar">
+
+                            <button type="button" id="btnVerComentarios" style="padding: 10px 18px; background-color: #9DAA75; color: #ffffff; border: none; border-radius: 15px; cursor: pointer;  font-size: 14px;">
+                                <strong> Ver comentarios</strong>
+                            </button>
+
+                    </div>
+
+                    <div id="contenedorComentariosEnviados" style="display: none; margin-top: 16px; padding: 14px; background: #fffde7; border: 1px solid #9DAA75; border-radius: 10px; color: #1f3541;">
+                    </div>
+                    
+                    
+                    <br>
+                    <br>
+                    <br>
+                    <br>
+                    <br>
+
+                    
+
                 </form>
+
+                
             </td>
 
         </tr>
     </table>
+    
  </div>
 
     <script src="scriptContacto.js"></script>
