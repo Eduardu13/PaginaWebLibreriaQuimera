@@ -250,6 +250,21 @@ main{
     border-bottom-right-radius: 1rem ;
 }
 
+
+.carrito-acciones-vacia,
+#btnVerCompras {
+    border: 0;
+    background-color: #274f6183;
+    padding: 1rem 1.8rem;
+    border-radius: 1rem;
+    color: #ffffff;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: 'Marcellus';
+    font-size: 0.95rem;
+    letter-spacing: 0.05rem;
+}
+
 .carrito-producto-cantidad,
 .carrito-producto-precio,
 .carrito-producto-subtotal {

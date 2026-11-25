@@ -89,15 +89,16 @@ if (btnIngresar) {
 
             if (respuesta.ok) {
                 alert("¡Bienvenido a Librería Quimera!");
-                
-                // MÁGIA AQUÍ: Guardamos el nombre directo que nos manda tu nuevo C#
+
+                const idUsuario = resultado.id ?? resultado.id_usuario;
+
                 localStorage.setItem('usuarioQuimera', JSON.stringify({
-                    id_usuario: resultado.id_usuario,
+                    id: idUsuario,
+                    id_usuario: idUsuario,
                     nombre: resultado.nombre,
                     correo: datos.Correo
                 }));
 
-                // Redirigimos a la página principal
                 window.location.href = "index.html";
             } else {
                 alert(resultado.mensaje);
