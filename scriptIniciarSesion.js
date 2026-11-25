@@ -57,11 +57,12 @@ if (btnCrearCuenta) {
         }
     };
 }
-
 // =========================================================
 // 3. VALIDAR CUENTA E INICIAR SESIÓN (GUARDANDO LA SESIÓN)
 // =========================================================
+const CORREO_ADMIN = "admin@quimera.com";
 const btnIngresar = document.getElementById('btnIngresar');
+
 if (btnIngresar) {
     btnIngresar.onclick = async (event) => {
         event.preventDefault();
@@ -88,18 +89,23 @@ if (btnIngresar) {
             let resultado = await respuesta.json();
 
             if (respuesta.ok) {
-                alert("¡Bienvenido a Librería Quimera!");
-
                 const idUsuario = resultado.id ?? resultado.id_usuario;
+                const correoIngresado = datos.Correo.trim();
 
                 localStorage.setItem('usuarioQuimera', JSON.stringify({
                     id: idUsuario,
                     id_usuario: idUsuario,
                     nombre: resultado.nombre,
-                    correo: datos.Correo
+                    correo: correoIngresado
                 }));
 
-                window.location.href = "index.html";
+                if (correoIngresado.toLowerCase() === CORREO_ADMIN.toLowerCase()) {
+                    alert("¡Bienvenido al Modo Administrador!");
+                    window.location.href = "admin.html";
+                } else {
+                    alert("¡Bienvenido a Librería Quimera!");
+                    window.location.href = "index.html";
+                }
             } else {
                 alert(resultado.mensaje);
             }

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración — Librería Quimera</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Marcellus&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-pagina: #e4edd0;
+            --bg-tarjeta: #fffde7;
+            --bg-suave: #f5f8ec;
+            --verde-oliva: #728156;
+            --verde-borde: #c7d3b0;
+            --azul-oscuro: #1f3541;
+            --guinda: #4f0802;
+            --dorado: #d4a20f;
+            --texto: #1f3541;
+            --texto-suave: #4c5d66;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Marcellus', Georgia, serif;
+            background-color: var(--bg-pagina);
+            color: var(--texto);
+            line-height: 1.5;
+        }
+
+        .contenedor-admin {
+            max-width: 1220px;
+            margin: 28px auto;
+            padding: 0 20px 40px;
+        }
+
+        .cabecera-admin {
+            background-color: var(--azul-oscuro);
+            color: var(--bg-tarjeta);
+            padding: 18px 24px;
+            border-radius: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            border-bottom: 4px solid var(--dorado);
+            box-shadow: 0 6px 18px rgba(31, 53, 65, 0.14);
+        }
+
+        .cabecera-admin h2 {
+            margin: 0;
+            font-size: 1.55rem;
+            letter-spacing: 0.4px;
+        }
+
+        .acciones-cabecera {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tarjeta-admin {
+            background-color: var(--bg-tarjeta);
+            border: 1px solid var(--verde-borde);
+            border-radius: 14px;
+            padding: 22px;
+            box-shadow: 0 6px 16px rgba(31, 53, 65, 0.08);
+        }
+
+        .tarjeta-admin h3 {
+            margin: 0 0 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--verde-borde);
+            color: var(--azul-oscuro);
+            font-size: 1.25rem;
+        }
+
+        .grid-formulario {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 14px;
+        }
+
+        .grupo-campo {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .grupo-campo label {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--azul-oscuro);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="file"],
+        select {
+            font-family: inherit;
+            font-size: 0.95rem;
+            padding: 9px 12px;
+            border-radius: 8px;
+            border: 1px solid #b5c29d;
+            background-color: #ffffff;
+            color: var(--texto);
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            border-color: var(--verde-oliva);
+            box-shadow: 0 0 0 3px rgba(114, 129, 86, 0.2);
+        }
+
+        .btn-admin {
+            font-family: inherit;
+            font-size: 0.92rem;
+            padding: 9px 15px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: transform 0.12s ease, opacity 0.2s ease;
+        }
+
+        .btn-admin:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        .btn-primario {
+            background-color: var(--verde-oliva);
+            color: #fffde7;
+        }
+
+        .btn-oscuro {
+            background-color: var(--azul-oscuro);
+            color: #fffde7;
+        }
+
+        .btn-claro {
+            background-color: var(--bg-suave);
+            color: var(--azul-oscuro);
+            border: 1px solid var(--verde-borde);
+        }
+
+        .btn-peligro {
+            background-color: var(--guinda);
+            color: #fffde7;
+        }
+
+        .barra-guardar {
+            margin-top: 16px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .grid-dos-columnas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 22px;
+            align-items: start;
+            margin-top: 24px;
+        }
+
+        .barra-filtros {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .barra-filtros input {
+            flex: 1;
+            min-width: 170px;
+        }
+
+        .lista-scroll {
+            max-height: 540px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .item-libro {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            background-color: var(--bg-suave);
+            border: 1px solid var(--verde-borde);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+        }
+
+        .item-libro small {
+            color: var(--texto-suave);
+        }
+
+        .item-pedido {
+            background-color: var(--bg-suave);
+            border: 1px solid var(--verde-borde);
+            border-left: 5px solid var(--dorado);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+        }
+
+        .item-pedido p {
+            margin: 4px 0;
+            font-size: 0.94rem;
+        }
+
+        .fila-estado {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="contenedor-admin">
+
+        <header class="cabecera-admin">
+            <h2>Panel de Administración — Librería Quimera</h2>
+            <div class="acciones-cabecera">
+                <a href="index.html" class="btn-admin btn-claro">Salir a la tienda</a>
+                <button type="button" id="btnCerrarSesionAdmin" class="btn-admin btn-peligro">
+                    Cerrar sesión
+                </button>
+            </div>
+        </header>
+
+        <section class="tarjeta-admin" style="margin-top: 22px;">
+            <h3>Agregar nuevo libro</h3>
+            <form id="formAgregarLibro">
+                <div class="grid-formulario">
+                    <div class="grupo-campo">
+                        <label for="tituloLibro">Título</label>
+                        <input type="text" id="tituloLibro" placeholder="" required>
+                    </div>
+
+                    <div class="grupo-campo">
+                        <label for="autorLibro">Autor</label>
+                        <input type="text" id="autorLibro" placeholder="" required>
+                    </div>
+
+                    <div class="grupo-campo">
+                        <label for="precioLibro">Precio ($)</label>
+                        <input type="number" step="0.01" min="0" id="precioLibro" placeholder="" required>
+                    </div>
+
+                    <div class="grupo-campo">
+                        <label for="stockLibro">Stock</label>
+                        <input type="number" min="0" id="stockLibro" placeholder="" required>
+                    </div>
+
+                    <div class="grupo-campo">
+                        <label for="categoriaLibro">Categoría</label>
+                        <select id="categoriaLibro" required>
+                            <option value="">Cargando categorías...</option>
+                        </select>
+                    </div>
+
+                    <div class="grupo-campo">
+                        <label for="archivoImagenLibro">Imagen del libro</label>
+                        <input type="file" id="archivoImagenLibro" accept="image/*" required>
+                    </div>
+                </div>
+
+                <div class="barra-guardar">
+                    <button type="submit" id="btnGuardarLibro" class="btn-admin btn-primario">
+                        Guardar libro
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section class="tarjeta-admin" style="margin-top: 22px;">
+            <h3>Nueva categoría</h3>
+            <div class="barra-filtros" style="margin-bottom: 14px;">
+                <input type="text" id="nombreNuevaCategoria" placeholder="Ej. Manga, Poesía, Ciencia Ficción...">
+                <button type="button" id="btnCrearCategoria" class="btn-admin btn-primario">Crear categoría</button>
+            </div>
+
+            <div id="listaCategoriasAdmin" class="lista-scroll" style="max-height: 220px;">
+                <p>Cargando categorías...</p>
+            </div>
+        </section>
+
+        <section class="grid-dos-columnas">
+
+            <div class="tarjeta-admin">
+                <h3>Libros en el catálogo</h3>
+
+                <div class="barra-filtros">
+                    <input type="text" id="buscarLibroAdmin" placeholder="Buscar por título o autor...">
+                    <select id="filtroCategoriaAdmin">
+                        <option value="todas">Todas las categorías</option>
+                    </select>
+                    <button type="button" id="btnRecargarLibros" class="btn-admin btn-claro">Actualizar</button>
+                </div>
+
+                <div id="listaLibrosAdmin" class="lista-scroll">
+                    <p>Cargando libros...</p>
+                </div>
+            </div>
+
+            <div class="tarjeta-admin">
+                <h3>Pedidos registrados</h3>
+
+                <div class="barra-filtros">
+                    <button type="button" id="btnRecargarPedidos" class="btn-admin btn-claro">
+                        Actualizar pedidos
+                    </button>
+                </div>
+
+                <div id="listaPedidosAdmin" class="lista-scroll">
+                    <p>Cargando pedidos...</p>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <script src="scriptAdmin.js"></script>
+</body>
+</html>

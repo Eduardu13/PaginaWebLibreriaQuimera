@@ -3149,56 +3149,140 @@
 // ]
 
 
-
-
-
-
 let LibrosArray = [];
-
-// Llamamos a nuestro servidor en C# (Asegúrate de que el número 7138 sea tu puerto correcto)
-// fetch('https://localhost:7138/obtener-productos') 
-
-fetch('https://localhost:7270/obtener-productos')
-  .then(respuesta => respuesta.json())
-  .then(datos => {
-      // Pasamos los datos directos y solo limpiamos el nombre de la categoría para tus botones
-      LibrosArray = datos.map(libro => ({
-          id: libro.id,
-          titulo: libro.titulo,
-          precio: libro.precio,
-          stock: libro.stock,
-          imagen: libro.imagen, 
-          autor: libro.autor,
-          categoria: {
-              nombre: libro.categoria,
-              id: libro.categoria.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/ /g, "")
-          }
-      }));
-      
-      if (document.querySelector("#contenedor-productos")) cargarLibros(LibrosArray);
-      else actualizarBotonesAgregar();
-      sincronizarTarjetasEstaticas();
-  })
-  .catch(error => console.error("Error en C#:", error));
-
-
-// ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
+const API_URL = "https://localhost:7270";
 
 const contenedorProductos = document.querySelector("#contenedor-productos");
-const botonesCategorias = document.querySelectorAll(".boton-categoria");
+let botonesCategorias = document.querySelectorAll(".boton-categoria");
 const tituloPrincipal = document.querySelector("#titulo-principal");
 let botonesAgregar = document.querySelectorAll(".producto-agregar");
 const numerito = document.querySelector("#numerito");
 
- 
+function normalizarIdCategoria(texto) {
+    return (texto || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+}
+
+function asignarEventosCategorias() {
+    botonesCategorias = document.querySelectorAll(".boton-categoria");
+
+    botonesCategorias.forEach(boton => {
+        boton.addEventListener("click", (e) => {
+            botonesCategorias.forEach(b => b.classList.remove("active"));
+            e.currentTarget.classList.add("active");
+
+            if (e.currentTarget.id !== "todos") {
+                const idSeleccionado = e.currentTarget.id;
+                const productosBoton = LibrosArray.filter(
+                    producto => producto.categoria.id === idSeleccionado
+                );
+                const libroCategoria = LibrosArray.find(
+                    producto => producto.categoria.id === idSeleccionado
+                );
+
+                if (tituloPrincipal) {
+                    tituloPrincipal.innerText =
+                        libroCategoria?.categoria?.nombre ||
+                        e.currentTarget.dataset.nombre ||
+                        e.currentTarget.innerText.trim();
+                }
+
+                cargarLibros(productosBoton);
+            } else {
+                if (tituloPrincipal) {
+                    tituloPrincipal.innerText = "Todos los libros";
+                }
+                cargarLibros(LibrosArray);
+            }
+        });
+    });
+}
+
+async function cargarCategoriasMenu() {
+    const menuUl = document.querySelector("aside nav ul.menu");
+    if (!menuUl) return;
+
+    menuUl.querySelectorAll("li.categoria-dinamica").forEach(li => li.remove());
+
+    let categorias = [];
+
+    try {
+        const resp = await fetch(`${API_URL}/api/admin/categorias`);
+        if (resp.ok) {
+            const data = await resp.json();
+            if (Array.isArray(data)) {
+                categorias = data
+                    .map(c => (typeof c === "string" ? c : c.nombre || c.Nombre || ""))
+                    .map(n => n.trim())
+                    .filter(Boolean);
+            }
+        }
+    } catch (err) {
+        console.warn("No se pudieron cargar categorías desde la API:", err);
+    }
+
+    if (categorias.length === 0 && LibrosArray.length > 0) {
+        categorias = [...new Set(
+            LibrosArray.map(l => l.categoria?.nombre).filter(Boolean)
+        )];
+    }
+
+    const categoriasUnicas = [...new Set(categorias)];
+    const liCarrito = menuUl.querySelector("li:has(.boton-carrito)") || menuUl.lastElementChild;
+
+    categoriasUnicas.forEach(nombreCat => {
+        const idCat = normalizarIdCategoria(nombreCat);
+        const li = document.createElement("li");
+        li.className = "categoria-dinamica";
+        li.innerHTML = `<button id="${idCat}" data-nombre="${nombreCat}" class="boton-menu boton-categoria">${nombreCat}</button>`;
+        menuUl.insertBefore(li, liCarrito);
+    });
+
+    asignarEventosCategorias();
+}
+
+asignarEventosCategorias();
+
+fetch(`${API_URL}/obtener-productos`)
+    .then(respuesta => respuesta.json())
+    .then(async datos => {
+        LibrosArray = datos.map(libro => ({
+            id: libro.id,
+            titulo: libro.titulo,
+            precio: libro.precio,
+            stock: libro.stock,
+            imagen: libro.imagen,
+            autor: libro.autor,
+            categoria: {
+                nombre: libro.categoria,
+                id: normalizarIdCategoria(libro.categoria)
+            }
+        }));
+
+        await cargarCategoriasMenu();
+
+        if (document.querySelector("#contenedor-productos")) cargarLibros(LibrosArray);
+        else actualizarBotonesAgregar();
+        sincronizarTarjetasEstaticas();
+    })
+    .catch(error => console.error("Error en C#:", error));
+
 //Esto llama a los todos los libros
 function cargarLibros(LibrosElegido) {
+    if (!contenedorProductos) return;
 
     contenedorProductos.innerHTML = "";
 
-    LibrosElegido.forEach(producto => {
+    if (!LibrosElegido || LibrosElegido.length === 0) {
+        contenedorProductos.innerHTML = "<p>No hay libros registrados en esta categoría todavía.</p>";
+        actualizarBotonesAgregar();
+        return;
+    }
 
+    LibrosElegido.forEach(producto => {
         const div = document.createElement("div");
         div.classList.add("producto");
 
@@ -3228,138 +3312,83 @@ function cargarLibros(LibrosElegido) {
 
     actualizarBotonesAgregar();
 }
-    
-// CONDICIONAL INTELIGENTE:
-// Si el contenedor dinámico existe, dibuja los libros (Catálogo).
-// if (contenedorProductos) {
-//     cargarLibros(LibrosArray);
-// } else {
-    // Si no existe (estamos en el Index), no dibujes nada, 
-    // pero activa los escuchadores para tus tarjetas estáticas.
-//     actualizarBotonesAgregar();
-// }
 
-
-//Esto hace que cuando le de click a las categorias solo llame a las id que tiene por categoria
-botonesCategorias.forEach(boton =>{
-    boton.addEventListener("click", (e) =>{
-
-        botonesCategorias.forEach(boton => boton.classList.remove("active"));
-        e.currentTarget.classList.add("active");
-
-
-        if(e.currentTarget.id != "todos"){
-
-        const libroCategoria = LibrosArray.find(producto => producto.categoria.id === e.currentTarget.id);
-        tituloPrincipal.innerText = libroCategoria.categoria.nombre;
-
-        const productosBoton = LibrosArray.filter(producto => producto.categoria.id === e.currentTarget.id);
-        cargarLibros(productosBoton);
-
-        }
-        else {
-            if (tituloPrincipal) {
-                tituloPrincipal.innerText = "Todos los libros";
-            }
-                cargarLibros(LibrosArray);
-            }
-    })
-
-});
-
-
-function actualizarBotonesAgregar(){
+function actualizarBotonesAgregar() {
     botonesAgregar = document.querySelectorAll(".producto-agregar");
 
-    botonesAgregar.forEach(boton =>{
-
+    botonesAgregar.forEach(boton => {
         boton.addEventListener("click", agregarAlCarrito);
     });
 }
-
 
 //Esto hace que el carrito se actualize cuando agregas un libro con JSON con el almacenamiento local
 let LibrosEnCarrito;
 
 let LibrosEnCarritoLS = localStorage.getItem("libros-en-carrito");
 
-if(LibrosEnCarritoLS) {
+if (LibrosEnCarritoLS) {
     LibrosEnCarrito = JSON.parse(LibrosEnCarritoLS);
     actulizarNumerito();
-
-}
-else{
-
+} else {
     LibrosEnCarrito = [];
-
 }
 
-
-function agregarAlCarrito(e){
+function agregarAlCarrito(e) {
     const idBoton = e.currentTarget.id;
     const libroAgregado = LibrosArray.find(producto => producto.id === idBoton);
+    if (!libroAgregado) return;
 
-    if (LibrosEnCarrito.some(producto => producto.id === idBoton)){
+    if (LibrosEnCarrito.some(producto => producto.id === idBoton)) {
         const index = LibrosEnCarrito.findIndex(producto => producto.id === idBoton);
-        LibrosEnCarrito[index].cantidad++; //El array detecta si es verdadero o falso y con cantidad lo va sumando
-    }
-    else {
+        LibrosEnCarrito[index].cantidad++;
+    } else {
         libroAgregado.cantidad = 1;
         LibrosEnCarrito.push(libroAgregado);
     }
-     
+
     actulizarNumerito();
 
     localStorage.setItem("libros-en-carrito", JSON.stringify(LibrosEnCarrito));
 
-    // --- ¡AQUÍ ESTÁ TU ALERTA MÁGICA! ---
-    // Usamos libroAgregado.titulo para que te diga exactamente qué libro compraste
     alert(`¡"${libroAgregado.titulo}" se agregó a tu carrito correctamente!`);
 }
 
-function actulizarNumerito(){
-    let nuevoNumerito = LibrosEnCarrito.reduce((acc,producto) => acc + producto.cantidad, 0);
-    
-    // Solo intenta escribir el número si el elemento '#numerito' existe en el HTML actual
+function actulizarNumerito() {
+    let nuevoNumerito = LibrosEnCarrito.reduce((acc, producto) => acc + producto.cantidad, 0);
+
     if (numerito) {
         numerito.innerText = nuevoNumerito;
     }
 }
 
-
 // AUTO-RELLENADO UNIVERSAL DE TARJETAS
-
 function sincronizarTarjetasEstaticas() {
     const tarjetas = document.querySelectorAll('.TarjetaLibro, .TarjetaOferta');
 
     tarjetas.forEach(tarjeta => {
         const botonAgregar = tarjeta.querySelector('.producto-agregar');
-        
+
         if (botonAgregar) {
             const idDelLibro = botonAgregar.id;
             const libro = LibrosArray.find(producto => producto.id === idDelLibro);
-            
+
             if (libro) {
                 const titulo = tarjeta.querySelector('.titulo-libro');
                 const autor = tarjeta.querySelector('.autor-libro');
                 const imagen = tarjeta.querySelector('img');
 
-                //  Inyectamos Título y Autor
                 if (titulo) titulo.innerText = libro.titulo;
                 if (autor && libro.autor) autor.innerText = libro.autor;
 
-                // 2. Inyectamos la Imagen
                 if (imagen && libro.imagen) {
                     imagen.src = libro.imagen;
                     imagen.alt = `Portada de ${libro.titulo}`;
                 }
-                
-                // Buscamos qué tipo de contenedor de precio tiene esta tarjeta
-                const precioNormal = tarjeta.querySelector('.precio-libro'); // Para el Index
-                const precioViejoOferta = tarjeta.querySelector('.PrecioViejo'); // Para Ofertas
-                const precioNuevoOferta = tarjeta.querySelector('.PrecioNuevo'); // Para Ofertas
 
-                // ESCENARIO A: Si estamos en el Index o Recomendaciones
+                const precioNormal = tarjeta.querySelector('.precio-libro');
+                const precioViejoOferta = tarjeta.querySelector('.PrecioViejo');
+                const precioNuevoOferta = tarjeta.querySelector('.PrecioNuevo');
+
                 if (precioNormal) {
                     if (libro.precioViejo) {
                         precioNormal.innerHTML = `<span style="text-decoration: line-through; color: #999; font-size: 0.85em; margin-right: 8px;">$${libro.precioViejo}</span> <span style="color: #c9302c; font-weight: bold;">$${libro.precio}</span>`;
@@ -3368,13 +3397,11 @@ function sincronizarTarjetasEstaticas() {
                     }
                 }
 
-                // ESCENARIO B: Si estamos en la página de Ofertas
                 if (precioViejoOferta && precioNuevoOferta) {
                     if (libro.precioViejo) {
                         precioViejoOferta.innerText = `$${libro.precioViejo}`;
                         precioNuevoOferta.innerText = `$${libro.precio}`;
                     } else {
-                        // Por si pones un libro sin descuento aquí por error
                         precioViejoOferta.innerText = "";
                         precioNuevoOferta.innerText = `$${libro.precio}`;
                     }
@@ -3383,7 +3410,3 @@ function sincronizarTarjetasEstaticas() {
         }
     });
 }
-
-// sincronizarTarjetasEstaticas();
-
-

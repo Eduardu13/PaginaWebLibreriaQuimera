@@ -12,6 +12,9 @@ if (!usuarioActivo) {
     }
 }
 
+
+
+
 // 2. Botón para Cerrar Sesión
 const btnCerrarSesion = document.getElementById('btnCerrarSesion');
 if (btnCerrarSesion) {
@@ -231,4 +234,15 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     });
+});
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    const usuarioActual = JSON.parse(localStorage.getItem("usuarioQuimera"));
+    const esAdmin = usuarioActual?.correo?.toLowerCase() === "admin@quimera.com";
+    const btnIrAdmin = document.getElementById("btnIrAdmin");
+
+    if (esAdmin && btnIrAdmin) {
+        btnIrAdmin.style.display = "inline-block";
+    }
 });
