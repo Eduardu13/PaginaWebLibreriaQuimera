@@ -11,56 +11,55 @@
 
     <link rel="stylesheet" href="global.css">
     <link rel="stylesheet" href="stylenovedades.css">
-
     <link rel="stylesheet" href="stylecatalogo.css">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 </head>
 <body>
-    
+
     <div class="ColorBarraDeActividades">
         <div class="BarraDeActividadesMargen">
-                <div class="FilaSuperior">
-                    <div class="LogoYTitulo">
-                        <img src="LechuzaLogo.png" class="logo">
-                        <a>    
-                            <h3 style="color: white"> Libreria <br> Quimera</h3>
-                        </a>
-                    </div>
-
-                    <div class="BuscadorHeader">
-                        <form>
-                            <input type="search" name="q" placeholder="Título, Autor o ISBN">
-                            <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
-                        </form>
-                    </div>
-
-                    <div class="AccionesUsuario">
-                        <a href="usuario.html" class="BotonUsuario">
-                            <i class="fa-solid fa-user"> </i> <span style="margin-left: 10px;">Mi cuenta</span>
-                        </a>
-
-                        <a href="carrito.html" class="BotonCarro">
-                            <i class="fa-solid fa-cart-arrow-down"> </i> <span style="margin-left: 10px;">Carrito </span> <span id="numerito" class="numerito"> 0 </span>
-                        </a>
-                    </div>
+            <div class="FilaSuperior">
+                <div class="LogoYTitulo">
+                    <img src="LechuzaLogo.png" class="logo">
+                    <a>
+                        <h3 style="color: white"> Libreria <br> Quimera</h3>
+                    </a>
                 </div>
 
-                <div class="FilaInferior">
-                    <nav class="BarraDeActividades">
-                        <a href="index.html">Inicio</a>
-                        <a href="ofertas.html" style="color: rgb(188, 2, 2);"><strong>¡Ofertas!</strong></a>
-                        <a href="catalogo.html">Catalogo</a>
-                        <a href="novedades.html">Novedades</a>
-                        <a href="contacto.html">Contacto</a>
-                    </nav>
+                <div class="BuscadorHeader">
+                    <form>
+                        <input type="search" name="q" placeholder="Título, Autor o ISBN">
+                        <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </form>
                 </div>
+
+                <div class="AccionesUsuario">
+                    <a href="usuario.html" class="BotonUsuario">
+                        <i class="fa-solid fa-user"> </i> <span style="margin-left: 10px;">Mi cuenta</span>
+                    </a>
+
+                    <a href="carrito.html" class="BotonCarro">
+                        <i class="fa-solid fa-cart-arrow-down"> </i> <span style="margin-left: 10px;">Carrito </span> <span id="numerito" class="numerito"> 0 </span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="FilaInferior">
+                <nav class="BarraDeActividades">
+                    <a href="index.html">Inicio</a>
+                    <a href="ofertas.html" style="color: rgb(188, 2, 2);"><strong>¡Ofertas!</strong></a>
+                    <a href="catalogo.html">Catalogo</a>
+                    <a href="novedades.html">Novedades</a>
+                    <a href="contacto.html">Contacto</a>
+                </nav>
+            </div>
         </div>
-    </div>  
+    </div>
 
     <div class="zona-novedades">
-        
+
         <header class="banner-bienvenida">
             <h1>Recién Llegados</h1>
             <p>Descubre las últimas joyas literarias que se integran a nuestra estantería este mes.</p>
@@ -68,10 +67,10 @@
 
         <section class="seccion-presentacion-grande">
             <h3 class="subtitulo-seccion">Lanzamientos de la Semana</h3>
-            
+
             <div class="carrusel-lanzamientos-contenedor">
                 <button type="button" class="flecha-carrusel izquierdo" onclick="cambiarLanzamiento(-1)"><i class="bi bi-chevron-left"></i></button>
-                
+
                 <div class="bloque-destacado" id="bloqueNovedadesDestacadas">
                     <p style="text-align: center; width: 100%;">Cargando novedades...</p>
                 </div>
@@ -82,50 +81,14 @@
 
         <section class="seccion-tendencias">
             <h3 class="subtitulo-seccion">Los Más Buscados de la Quincena</h3>
-            
-            <div class="contenedor-ranking">
-                
-                <div class="fila-ranking">
-                    <div class="numero-ranking">01</div>
-                    <img src="./img/libro21.jpg" alt="Top 1" class="foto-ranking">
-                    <div class="info-ranking">
-                        <h4>Besos de Canela y Hielo</h4>
-                        <p class="autor-libro">Estela Bescós</p>
-                        <span class="categoria-tag">Romance</span>
-                    </div>
-                    <div class="precio-ranking">$349.00</div>
-                    <a href="catalogo.html#libroRomance-01" class="boton-ver-mas">Ver detalles</a>
-                </div>
 
-                <div class="fila-ranking">
-                    <div class="numero-ranking">02</div>
-                    <img src="./img/libro64.jpg" alt="Top 2" class="foto-ranking">
-                    <div class="info-ranking">
-                        <h4>La guerra de los mundos</h4>
-                        <p class="autor-libro">H.G. Wells</p>
-                        <span class="categoria-tag">Ciencia Ficcion</span>
-                    </div>
-                    <div class="precio-ranking">$149.00</div>
-                    <a href="catalogo.html#libroCienciaFiccion-04" class="boton-ver-mas">Ver detalles</a>
-                </div>
-
-                <div class="fila-ranking elemento-oculto">
-                    <div class="numero-ranking">03</div>
-                    <img src="./img/libro8.jpg" alt="Top 3" class="foto-ranking">
-                    <div class="info-ranking">
-                        <h4>Moby Dick</h4>
-                        <p class="autor-libro">Herman Melville</p>
-                        <span class="categoria-tag">Clasicos</span>
-                    </div>
-                    <div class="precio-ranking">$372.00</div>
-                    <a href="catalogo.html#ibroClasico-08" class="boton-ver-mas">Ver detalles</a>
-                </div>
-
+            <div class="contenedor-ranking" id="contenedorRankingQuincena">
+                <p style="text-align: center; width: 100%;">Cargando más buscados...</p>
             </div>
 
-            <div class="contenedor-ver-mas-top">
+            <!-- <div class="contenedor-ver-mas-top">
                 <button type="button" class="boton-cargar-top" id="boton-tendencias" onclick="mostrarMasTendencias()">Ver más tendencias <i class="bi bi-arrow-down-short"></i></button>
-            </div>
+            </div> -->
         </section>
 
         <section class="seccion-autor">
@@ -151,7 +114,7 @@
     <script>
     document.addEventListener("DOMContentLoaded", async () => {
         const bloqueDestacado = document.getElementById("bloqueNovedadesDestacadas");
-        if (!bloqueDestacado) return;
+        const contenedorRanking = document.getElementById("contenedorRankingQuincena");
 
         function obtenerCarritoLS() {
             const raw = localStorage.getItem("libros-en-carrito");
@@ -215,6 +178,33 @@
             };
         }
 
+        function agregarLibroDesdeNovedades(libroDatos) {
+            const desdeCatalogo = Array.isArray(window.LibrosArray)
+                ? window.LibrosArray.find(l => String(l.id) === String(libroDatos.id))
+                : null;
+
+            const carrito = obtenerCarritoLS();
+            const indice = carrito.findIndex(p => String(p.id) === String(libroDatos.id));
+
+            if (indice !== -1) {
+                carrito[indice].cantidad = (Number(carrito[indice].cantidad) || 1) + 1;
+                carrito[indice].precio = libroDatos.precio;
+            } else {
+                carrito.push({
+                    ...(desdeCatalogo || {}),
+                    id: libroDatos.id,
+                    titulo: libroDatos.titulo,
+                    autor: libroDatos.autor,
+                    precio: libroDatos.precio,
+                    imagen: libroDatos.imagen,
+                    cantidad: 1
+                });
+            }
+
+            guardarCarritoLS(carrito);
+            alert(`¡"${libroDatos.titulo}" se agregó a tu carrito correctamente!`);
+        }
+
         try {
             const resp = await fetch("https://localhost:7270/api/admin/secciones-libros");
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -227,95 +217,141 @@
                 .filter(x => x.seccion === "ofertas")
                 .forEach(x => mapaOfertas.set(String(x.idLibro), x));
 
-            const novedades = lista.filter(x => x.seccion === "pagina_novedades");
+            if (bloqueDestacado) {
+                const novedades = lista.filter(x => x.seccion === "pagina_novedades");
 
-            if (novedades.length === 0) {
-                bloqueDestacado.innerHTML = `<p style="text-align: center; width: 100%;">No hay libros en novedades todavía.</p>`;
-                return;
+                if (novedades.length === 0) {
+                    bloqueDestacado.innerHTML = `<p style="text-align: center; width: 100%;">No hay libros en novedades todavía.</p>`;
+                } else {
+                    bloqueDestacado.innerHTML = novedades.map((item, idx) => {
+                        const etiqueta = (item.etiqueta || "").trim();
+                        const descripcion = (item.descripcion || "").trim();
+                        const precioNormal = Number(item.precio || 0);
+                        const oferta = calcularOfertaItem(precioNormal, mapaOfertas.get(String(item.idLibro)));
+                        const precioFinal = oferta.precioFinal;
+
+                        const tituloEsc = (item.titulo || "").replace(/"/g, "&quot;");
+                        const autorEsc = (item.autor || "").replace(/"/g, "&quot;");
+                        const imgEsc = (item.imagen || "").replace(/"/g, "&quot;");
+
+                        const htmlPrecio = oferta.tieneOferta && precioFinal < precioNormal
+                            ? `<p class="precio-libro">
+                                   <span style="text-decoration: line-through; color: #888; font-size: 0.85em; margin-right: 8px;">$${precioNormal.toFixed(2)}</span>
+                                   <strong style="color: #c9302c;">$${precioFinal.toFixed(2)}</strong>
+                                   <small style="display:block; font-size:0.8rem; color:#c9302c;">-${oferta.pct}% (ahorro de $${oferta.ahorro.toFixed(2)})</small>
+                               </p>`
+                            : `<p class="precio-libro">$${precioNormal.toFixed(2)}</p>`;
+
+                        return `
+                            <div class="tarjeta-destacada-horizontal ${idx === 0 ? "activa" : ""}">
+                                <div class="contenedor-foto-destacada">
+                                    <img src="${imgEsc}" alt="${tituloEsc}">
+                                </div>
+                                <div class="detalles-grandes">
+                                    ${etiqueta ? `<span class="insignia-novedad"><i class="bi bi-star-fill"></i> ${etiqueta}</span>` : ""}
+                                    ${oferta.tieneOferta ? `<span class="insignia-novedad" style="background:#c9302c;color:#fff;margin-left:6px;">¡En Oferta!</span>` : ""}
+                                    <h3 class="titulo-libro">${item.titulo}</h3>
+                                    <p class="autor-libro">${item.autor}</p>
+                                    ${descripcion ? `<p class="sinopsis-libro">${descripcion}</p>` : ""}
+                                    ${htmlPrecio}
+                                    <button
+                                        type="button"
+                                        class="producto-agregar btn-novedad-agregar"
+                                        data-id="${item.idLibro}"
+                                        data-titulo="${tituloEsc}"
+                                        data-autor="${autorEsc}"
+                                        data-precio="${precioFinal}"
+                                        data-imagen="${imgEsc}"
+                                    >AGREGAR</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join("");
+
+                    bloqueDestacado.querySelectorAll(".btn-novedad-agregar").forEach(btn => {
+                        btn.addEventListener("click", () => {
+                            agregarLibroDesdeNovedades({
+                                id: btn.dataset.id,
+                                titulo: btn.dataset.titulo,
+                                autor: btn.dataset.autor,
+                                precio: Number(btn.dataset.precio || 0),
+                                imagen: btn.dataset.imagen
+                            });
+                        });
+                    });
+                }
             }
 
-            bloqueDestacado.innerHTML = novedades.map((item, idx) => {
-                const etiqueta = (item.etiqueta || "").trim();
-                const descripcion = (item.descripcion || "").trim();
-                const precioNormal = Number(item.precio || 0);
-                const oferta = calcularOfertaItem(precioNormal, mapaOfertas.get(String(item.idLibro)));
-                const precioFinal = oferta.precioFinal;
+            if (contenedorRanking) {
+                const buscados = lista.filter(x => x.seccion === "mas_buscados_quincena");
 
-                const tituloEsc = (item.titulo || "").replace(/"/g, "&quot;");
-                const autorEsc = (item.autor || "").replace(/"/g, "&quot;");
-                const imgEsc = (item.imagen || "").replace(/"/g, "&quot;");
+                if (buscados.length === 0) {
+                    contenedorRanking.innerHTML = `<p style="text-align: center; width: 100%;">No hay libros en Los Más Buscados de la Quincena todavía.</p>`;
+                } else {
+                    contenedorRanking.innerHTML = buscados.map((item, idx) => {
+                        const numero = String(idx + 1).padStart(2, "0");
+                        const precioNormal = Number(item.precio || 0);
+                        const oferta = calcularOfertaItem(precioNormal, mapaOfertas.get(String(item.idLibro)));
+                        const precioFinal = oferta.precioFinal;
 
-                const htmlPrecio = oferta.tieneOferta && precioFinal < precioNormal
-                    ? `<p class="precio-libro">
-                           <span style="text-decoration: line-through; color: #888; font-size: 0.85em; margin-right: 8px;">$${precioNormal.toFixed(2)}</span>
-                           <strong style="color: #c9302c;">$${precioFinal.toFixed(2)}</strong>
-                           <small style="display:block; font-size:0.8rem; color:#c9302c;">-${oferta.pct}% (ahorro de $${oferta.ahorro.toFixed(2)})</small>
-                       </p>`
-                    : `<p class="precio-libro">$${precioNormal.toFixed(2)}</p>`;
+                        const desdeCatalogo = Array.isArray(window.LibrosArray)
+                            ? window.LibrosArray.find(l => String(l.id) === String(item.idLibro))
+                            : null;
+                        const categoriaNombre = desdeCatalogo?.categoria?.nombre || desdeCatalogo?.categoria || "";
 
-                return `
-                    <div class="tarjeta-destacada-horizontal ${idx === 0 ? "activa" : ""}">
-                        <div class="contenedor-foto-destacada">
-                            <img src="${imgEsc}" alt="${tituloEsc}">
-                        </div>
-                        <div class="detalles-grandes">
-                            ${etiqueta ? `<span class="insignia-novedad"><i class="bi bi-star-fill"></i> ${etiqueta}</span>` : ""}
-                            ${oferta.tieneOferta ? `<span class="insignia-novedad" style="background:#c9302c;color:#fff;margin-left:6px;">¡En Oferta!</span>` : ""}
-                            <h3 class="titulo-libro">${item.titulo}</h3>
-                            <p class="autor-libro">${item.autor}</p>
-                            ${descripcion ? `<p class="sinopsis-libro">${descripcion}</p>` : ""}
-                            ${htmlPrecio}
-                            <button
-                                type="button"
-                                class="producto-agregar btn-novedad-agregar"
-                                data-id="${item.idLibro}"
-                                data-titulo="${tituloEsc}"
-                                data-autor="${autorEsc}"
-                                data-precio="${precioFinal}"
-                                data-imagen="${imgEsc}"
-                            >AGREGAR</button>
-                        </div>
-                    </div>
-                `;
-            }).join("");
+                        const tituloEsc = (item.titulo || "").replace(/"/g, "&quot;");
+                        const autorEsc = (item.autor || "").replace(/"/g, "&quot;");
+                        const imgEsc = (item.imagen || "").replace(/"/g, "&quot;");
 
-            bloqueDestacado.querySelectorAll(".btn-novedad-agregar").forEach(btn => {
-                btn.addEventListener("click", () => {
-                    const id = btn.dataset.id;
-                    const titulo = btn.dataset.titulo;
-                    const autor = btn.dataset.autor;
-                    const precio = Number(btn.dataset.precio || 0);
-                    const imagen = btn.dataset.imagen;
+                        const precioHtml = oferta.tieneOferta && precioFinal < precioNormal
+                            ? `<span style="text-decoration:line-through;color:#888;font-size:0.85em;margin-right:6px;">$${precioNormal.toFixed(2)}</span><strong style="color:#c9302c;">$${precioFinal.toFixed(2)}</strong>`
+                            : `$${precioNormal.toFixed(2)}`;
 
-                    const desdeCatalogo = Array.isArray(window.LibrosArray)
-                        ? window.LibrosArray.find(l => String(l.id) === String(id))
-                        : null;
+                        return `
+                            <div class="fila-ranking">
+                                <div class="numero-ranking">${numero}</div>
+                                <img src="${imgEsc}" alt="${tituloEsc}" class="foto-ranking">
+                                <div class="info-ranking">
+                                    <h4>${item.titulo}</h4>
+                                    <p class="autor-libro">${item.autor}</p>
+                                    ${categoriaNombre ? `<span class="categoria-tag">${categoriaNombre}</span>` : ""}
+                                    ${oferta.tieneOferta && oferta.pct > 0 ? `<span class="categoria-tag" style="background:#c9302c;color:#fff;margin-left:4px;">-${oferta.pct}%</span>` : ""}
+                                </div>
+                                <div class="precio-ranking">${precioHtml}</div>
+                                <button
+                                    type="button"
+                                    class="producto-agregar btn-buscado-agregar"
+                                    data-id="${item.idLibro}"
+                                    data-titulo="${tituloEsc}"
+                                    data-autor="${autorEsc}"
+                                    data-precio="${precioFinal}"
+                                    data-imagen="${imgEsc}"
+                                >AGREGAR</button>
+                            </div>
+                        `;
+                    }).join("");
 
-                    const carrito = obtenerCarritoLS();
-                    const indice = carrito.findIndex(p => String(p.id) === String(id));
-
-                    if (indice !== -1) {
-                        carrito[indice].cantidad = (Number(carrito[indice].cantidad) || 1) + 1;
-                        carrito[indice].precio = precio;
-                    } else {
-                        carrito.push({
-                            ...(desdeCatalogo || {}),
-                            id,
-                            titulo,
-                            autor,
-                            precio,
-                            imagen,
-                            cantidad: 1
+                    contenedorRanking.querySelectorAll(".btn-buscado-agregar").forEach(btn => {
+                        btn.addEventListener("click", () => {
+                            agregarLibroDesdeNovedades({
+                                id: btn.dataset.id,
+                                titulo: btn.dataset.titulo,
+                                autor: btn.dataset.autor,
+                                precio: Number(btn.dataset.precio || 0),
+                                imagen: btn.dataset.imagen
+                            });
                         });
-                    }
-
-                    guardarCarritoLS(carrito);
-                    alert(`¡"${titulo}" se agregó a tu carrito correctamente!`);
-                });
-            });
+                    });
+                }
+            }
         } catch (err) {
             console.error("Error cargando novedades:", err);
-            bloqueDestacado.innerHTML = `<p style="text-align: center; width: 100%;">Error al cargar las novedades.</p>`;
+            if (bloqueDestacado) {
+                bloqueDestacado.innerHTML = `<p style="text-align: center; width: 100%;">Error al cargar las novedades.</p>`;
+            }
+            if (contenedorRanking) {
+                contenedorRanking.innerHTML = `<p style="text-align: center; width: 100%;">Error al cargar más buscados.</p>`;
+            }
         }
     });
     </script>

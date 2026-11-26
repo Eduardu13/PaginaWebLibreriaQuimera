@@ -384,8 +384,8 @@
                     Ofertas
                 </button>
                 <button type="button" id="subtabNovedadesAdmin" class="btn-seccion-admin pequena">
-                Novedades
-                 </button>
+                    Novedades
+                </button>
                 <button type="button" id="subtabCatalogoAdmin" class="btn-seccion-admin pequena">
                     Catálogo
                 </button>
@@ -550,6 +550,39 @@
                         <h4 style="margin: 0 0 12px;">Libros actualmente en Novedades</h4>
                         <div id="listaLibrosNovedadesAdmin" class="lista-scroll" style="max-height: 360px;">
                             <p>Cargando novedades...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="tarjeta-admin" style="margin-top: 18px;">
+                    <h3>Administrar Los Más Buscados de la Quincena</h3>
+
+                    <div class="grid-formulario">
+                        <div class="grupo-campo">
+                            <label for="filtroCategoriaBuscado">Filtrar por categoría</label>
+                            <select id="filtroCategoriaBuscado">
+                                <option value="todas">Todas las categorías</option>
+                            </select>
+                        </div>
+
+                        <div class="grupo-campo">
+                            <label for="selectLibroBuscado">Libro del catálogo</label>
+                            <select id="selectLibroBuscado">
+                                <option value="">Cargando libros...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="barra-guardar">
+                        <button type="button" id="btnAgregarLibroBuscado" class="btn-admin btn-primario">
+                            Agregar a más buscados
+                        </button>
+                    </div>
+
+                    <div class="caja-banner-actual" style="margin-top: 18px; margin-bottom: 0;">
+                        <h4 style="margin: 0 0 12px;">Libros en Los Más Buscados de la Quincena</h4>
+                        <div id="listaLibrosBuscadosAdmin" class="lista-scroll" style="max-height: 320px;">
+                            <p>Cargando más buscados...</p>
                         </div>
                     </div>
                 </section>

@@ -69,6 +69,11 @@ const descripcionNovedadLibro = document.getElementById("descripcionNovedadLibro
 const btnAgregarLibroNovedad = document.getElementById("btnAgregarLibroNovedad");
 const listaLibrosNovedadesAdmin = document.getElementById("listaLibrosNovedadesAdmin");
 
+const filtroCategoriaBuscado = document.getElementById("filtroCategoriaBuscado");
+const selectLibroBuscado = document.getElementById("selectLibroBuscado");
+const btnAgregarLibroBuscado = document.getElementById("btnAgregarLibroBuscado");
+const listaLibrosBuscadosAdmin = document.getElementById("listaLibrosBuscadosAdmin");
+
 const vistaPreviaBannerActual = document.getElementById("vistaPreviaBannerActual");
 const inputArchivoBannerPopup = document.getElementById("inputArchivoBannerPopup");
 const inputUrlBannerPopup = document.getElementById("inputUrlBannerPopup");
@@ -116,12 +121,23 @@ function configurarSubseccionesGestion() {
     const tabs = [
         { btn: subtabInicioAdmin, panel: subseccionInicioAdmin, onOpen: cargarSeccionesInicioAdmin },
         { btn: subtabOfertasAdmin, panel: subseccionOfertasAdmin, onOpen: cargarOfertasAdmin },
-        { btn: subtabNovedadesAdmin, panel: subseccionNovedadesAdmin, onOpen: cargarNovedadesAdmin },
+        {
+            btn: subtabNovedadesAdmin,
+            panel: subseccionNovedadesAdmin,
+            onOpen: async () => {
+                await cargarNovedadesAdmin();
+                await cargarBuscadosQuincenaAdmin();
+            }
+        },
         { btn: subtabCatalogoAdmin, panel: subseccionCatalogoAdmin, onOpen: cargarLibrosAdmin },
-        { btn: subtabPedidosMensajesAdmin, panel: subseccionPedidosMensajesAdmin, onOpen: async () => {
-            await cargarPedidosAdmin();
-            await cargarMensajesAdmin();
-        }}
+        {
+            btn: subtabPedidosMensajesAdmin,
+            panel: subseccionPedidosMensajesAdmin,
+            onOpen: async () => {
+                await cargarPedidosAdmin();
+                await cargarMensajesAdmin();
+            }
+        }
     ];
 
     tabs.forEach(item => {
@@ -151,6 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarSeccionesInicioAdmin();
     cargarOfertasAdmin();
     cargarNovedadesAdmin();
+    cargarBuscadosQuincenaAdmin();
     cargarBannerPopupAdmin();
     cargarBannersIntermediosAdmin();
 });
@@ -191,6 +208,12 @@ if (selectLibroOferta) {
 if (filtroCategoriaNovedad) {
     filtroCategoriaNovedad.addEventListener("change", () => {
         llenarSelectLibrosNovedad(todosLosLibrosAdmin);
+    });
+}
+
+if (filtroCategoriaBuscado) {
+    filtroCategoriaBuscado.addEventListener("change", () => {
+        llenarSelectLibrosBuscado(todosLosLibrosAdmin);
     });
 }
 
@@ -576,123 +599,77 @@ function obtenerCategoriasUnicas(libros) {
     )].sort((a, b) => a.localeCompare(b, "es"));
 }
 
-function llenarFiltroCategorias(libros) {
-    if (!filtroCategoriaAdmin) return;
-
-    const valorActual = filtroCategoriaAdmin.value;
+function poblarSelectCategoriaGenerico(selectEl, libros) {
+    if (!selectEl) return;
+    const valorActual = selectEl.value;
     const categoriasUnicas = obtenerCategoriasUnicas(libros);
 
-    filtroCategoriaAdmin.innerHTML = `<option value="todas">Todas las categorías</option>` +
+    selectEl.innerHTML =
+        `<option value="todas">Todas las categorías</option>` +
         categoriasUnicas.map(cat => `<option value="${cat}">${cat}</option>`).join("");
 
     if (categoriasUnicas.includes(valorActual)) {
-        filtroCategoriaAdmin.value = valorActual;
+        selectEl.value = valorActual;
     }
+}
+
+function poblarSelectLibroGenerico(selectEl, filtroEl, libros, incluirPrecio = false) {
+    if (!selectEl) return;
+
+    const categoriaElegida = filtroEl?.value || "todas";
+    const listaBase = Array.isArray(libros) ? libros : [];
+
+    const filtrados = categoriaElegida === "todas"
+        ? listaBase
+        : listaBase.filter(l => (l.categoria || "").trim().toLowerCase() === categoriaElegida.toLowerCase());
+
+    if (filtrados.length === 0) {
+        selectEl.innerHTML = `<option value="">No hay libros en esta categoría</option>`;
+        return;
+    }
+
+    selectEl.innerHTML =
+        `<option value="">Selecciona un libro...</option>` +
+        filtrados.map(l => {
+            const extraPrecio = incluirPrecio ? ` ($${Number(l.precio || 0).toFixed(2)})` : "";
+            return `<option value="${l.id}">${l.titulo} — ${l.autor}${extraPrecio}</option>`;
+        }).join("");
+}
+
+function llenarFiltroCategorias(libros) {
+    poblarSelectCategoriaGenerico(filtroCategoriaAdmin, libros);
 }
 
 function llenarFiltroCategoriasInicio(libros) {
-    if (!filtroCategoriaInicio) return;
-
-    const valorActual = filtroCategoriaInicio.value;
-    const categoriasUnicas = obtenerCategoriasUnicas(libros);
-
-    filtroCategoriaInicio.innerHTML =
-        `<option value="todas">Todas las categorías</option>` +
-        categoriasUnicas.map(cat => `<option value="${cat}">${cat}</option>`).join("");
-
-    if (categoriasUnicas.includes(valorActual)) {
-        filtroCategoriaInicio.value = valorActual;
-    }
+    poblarSelectCategoriaGenerico(filtroCategoriaInicio, libros);
 }
 
 function llenarSelectLibrosInicio(libros) {
-    if (!selectLibroInicio) return;
-
-    const categoriaElegida = filtroCategoriaInicio?.value || "todas";
-    const listaBase = Array.isArray(libros) ? libros : [];
-
-    const filtrados = categoriaElegida === "todas"
-        ? listaBase
-        : listaBase.filter(l => (l.categoria || "").trim().toLowerCase() === categoriaElegida.toLowerCase());
-
-    if (filtrados.length === 0) {
-        selectLibroInicio.innerHTML = `<option value="">No hay libros en esta categoría</option>`;
-        return;
-    }
-
-    selectLibroInicio.innerHTML =
-        `<option value="">Selecciona un libro...</option>` +
-        filtrados.map(l => `<option value="${l.id}">${l.titulo} — ${l.autor}</option>`).join("");
+    poblarSelectLibroGenerico(selectLibroInicio, filtroCategoriaInicio, libros, false);
 }
 
 function llenarFiltroCategoriasOferta(libros) {
-    if (!filtroCategoriaOferta) return;
-
-    const valorActual = filtroCategoriaOferta.value;
-    const categoriasUnicas = obtenerCategoriasUnicas(libros);
-
-    filtroCategoriaOferta.innerHTML =
-        `<option value="todas">Todas las categorías</option>` +
-        categoriasUnicas.map(cat => `<option value="${cat}">${cat}</option>`).join("");
-
-    if (categoriasUnicas.includes(valorActual)) {
-        filtroCategoriaOferta.value = valorActual;
-    }
+    poblarSelectCategoriaGenerico(filtroCategoriaOferta, libros);
 }
 
 function llenarSelectLibrosOferta(libros) {
-    if (!selectLibroOferta) return;
-
-    const categoriaElegida = filtroCategoriaOferta?.value || "todas";
-    const listaBase = Array.isArray(libros) ? libros : [];
-
-    const filtrados = categoriaElegida === "todas"
-        ? listaBase
-        : listaBase.filter(l => (l.categoria || "").trim().toLowerCase() === categoriaElegida.toLowerCase());
-
-    if (filtrados.length === 0) {
-        selectLibroOferta.innerHTML = `<option value="">No hay libros en esta categoría</option>`;
-        return;
-    }
-
-    selectLibroOferta.innerHTML =
-        `<option value="">Selecciona un libro...</option>` +
-        filtrados.map(l => `<option value="${l.id}">${l.titulo} — ${l.autor} ($${Number(l.precio || 0).toFixed(2)})</option>`).join("");
+    poblarSelectLibroGenerico(selectLibroOferta, filtroCategoriaOferta, libros, true);
 }
 
 function llenarFiltroCategoriasNovedad(libros) {
-    if (!filtroCategoriaNovedad) return;
-
-    const valorActual = filtroCategoriaNovedad.value;
-    const categoriasUnicas = obtenerCategoriasUnicas(libros);
-
-    filtroCategoriaNovedad.innerHTML =
-        `<option value="todas">Todas las categorías</option>` +
-        categoriasUnicas.map(cat => `<option value="${cat}">${cat}</option>`).join("");
-
-    if (categoriasUnicas.includes(valorActual)) {
-        filtroCategoriaNovedad.value = valorActual;
-    }
+    poblarSelectCategoriaGenerico(filtroCategoriaNovedad, libros);
 }
 
 function llenarSelectLibrosNovedad(libros) {
-    if (!selectLibroNovedad) return;
+    poblarSelectLibroGenerico(selectLibroNovedad, filtroCategoriaNovedad, libros, false);
+}
 
-    const categoriaElegida = filtroCategoriaNovedad?.value || "todas";
-    const listaBase = Array.isArray(libros) ? libros : [];
+function llenarFiltroCategoriasBuscado(libros) {
+    poblarSelectCategoriaGenerico(filtroCategoriaBuscado, libros);
+}
 
-    const filtrados = categoriaElegida === "todas"
-        ? listaBase
-        : listaBase.filter(l => (l.categoria || "").trim().toLowerCase() === categoriaElegida.toLowerCase());
-
-    if (filtrados.length === 0) {
-        selectLibroNovedad.innerHTML = `<option value="">No hay libros en esta categoría</option>`;
-        return;
-    }
-
-    selectLibroNovedad.innerHTML =
-        `<option value="">Selecciona un libro...</option>` +
-        filtrados.map(l => `<option value="${l.id}">${l.titulo} — ${l.autor}</option>`).join("");
+function llenarSelectLibrosBuscado(libros) {
+    poblarSelectLibroGenerico(selectLibroBuscado, filtroCategoriaBuscado, libros, false);
 }
 
 function renderizarLibrosFiltrados() {
@@ -771,6 +748,8 @@ async function cargarLibrosAdmin() {
         autocompletarPrecioLibroOferta();
         llenarFiltroCategoriasNovedad(todosLosLibrosAdmin);
         llenarSelectLibrosNovedad(todosLosLibrosAdmin);
+        llenarFiltroCategoriasBuscado(todosLosLibrosAdmin);
+        llenarSelectLibrosBuscado(todosLosLibrosAdmin);
         renderizarLibrosFiltrados();
     } catch (err) {
         console.error("Error cargando libros admin:", err);
@@ -999,10 +978,10 @@ async function cargarNovedadesAdmin() {
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
         const items = await resp.json();
-        const novedades = (Array.isArray(items) ? items : []).filter(x => x.seccion === "novedades");
+        const novedades = (Array.isArray(items) ? items : []).filter(x => x.seccion === "pagina_novedades");
 
         if (novedades.length === 0) {
-            listaLibrosNovedadesAdmin.innerHTML = `<p style="margin:0;color:var(--texto-suave);">No hay libros en novedades todavía.</p>`;
+            listaLibrosNovedadesAdmin.innerHTML = `<p style="margin:0;color:var(--texto-suave);">No hay libros en la página de Novedades todavía.</p>`;
             return;
         }
 
@@ -1050,7 +1029,7 @@ if (btnAgregarLibroNovedad) {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    Seccion: "novedades",
+                    Seccion: "pagina_novedades",
                     IdLibro: idLibro,
                     Etiqueta: etiqueta || null,
                     Descripcion: descripcion || null
@@ -1074,6 +1053,81 @@ if (btnAgregarLibroNovedad) {
     });
 }
 
+async function cargarBuscadosQuincenaAdmin() {
+    if (!listaLibrosBuscadosAdmin) return;
+
+    try {
+        const resp = await fetch(`${API_ADMIN_URL}/api/admin/secciones-libros`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+        const items = await resp.json();
+        const buscados = (Array.isArray(items) ? items : []).filter(x => x.seccion === "mas_buscados_quincena");
+
+        if (buscados.length === 0) {
+            listaLibrosBuscadosAdmin.innerHTML = `<p style="margin:0;color:var(--texto-suave);">No hay libros en Los Más Buscados de la Quincena todavía.</p>`;
+            return;
+        }
+
+        listaLibrosBuscadosAdmin.innerHTML = buscados.map((x, i) => `
+            <div class="item-libro" style="padding: 10px 12px; gap: 12px;">
+                <strong>#${String(i + 1).padStart(2, "0")}</strong>
+                <img src="${x.imagen || ""}" alt="Portada de ${x.titulo}" style="width: 46px; height: 68px; object-fit: cover; border-radius: 6px; border: 1px solid var(--verde-borde); flex-shrink: 0;">
+                <div style="flex: 1; min-width: 0;">
+                    <strong>${x.titulo}</strong> — ${x.autor}
+                    <br>
+                    <small><strong>$${Number(x.precio || 0).toFixed(2)}</strong> · ID: ${x.idLibro}</small>
+                </div>
+                <button type="button" class="btn-admin btn-peligro btn-quitar-buscado" data-id="${x.idSeccionLibro}" style="padding: 6px 12px;">
+                    Quitar
+                </button>
+            </div>
+        `).join("");
+
+        document.querySelectorAll(".btn-quitar-buscado").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                await quitarLibroDeSeccion(btn.dataset.id);
+                await cargarBuscadosQuincenaAdmin();
+            });
+        });
+    } catch (err) {
+        console.error("Error cargando más buscados:", err);
+        listaLibrosBuscadosAdmin.innerHTML = `<p style="margin:0;color:var(--texto-suave);">Error al cargar más buscados.</p>`;
+    }
+}
+
+if (btnAgregarLibroBuscado) {
+    btnAgregarLibroBuscado.addEventListener("click", async () => {
+        const idLibro = selectLibroBuscado?.value || "";
+        if (!idLibro) {
+            alert("Selecciona un libro para agregar a Los Más Buscados de la Quincena.");
+            return;
+        }
+
+        try {
+            const resp = await fetch(`${API_ADMIN_URL}/api/admin/secciones-libros`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    Seccion: "mas_buscados_quincena",
+                    IdLibro: idLibro
+                })
+            });
+
+            const data = await resp.json();
+            if (!resp.ok) {
+                alert(data.mensaje || "No se pudo agregar el libro.");
+                return;
+            }
+
+            alert(data.mensaje || "Libro agregado a Los Más Buscados de la Quincena.");
+            await cargarBuscadosQuincenaAdmin();
+        } catch (err) {
+            console.error("Error agregando a más buscados:", err);
+            alert("Error de conexión al agregar el libro.");
+        }
+    });
+}
+
 async function quitarLibroDeSeccion(idSeccionLibro) {
     if (!confirm("¿Deseas quitar este libro del apartado?")) return;
 
@@ -1091,6 +1145,7 @@ async function quitarLibroDeSeccion(idSeccionLibro) {
         await cargarSeccionesInicioAdmin();
         await cargarOfertasAdmin();
         await cargarNovedadesAdmin();
+        await cargarBuscadosQuincenaAdmin();
     } catch (err) {
         console.error("Error quitando libro de sección:", err);
         alert("Error de conexión al quitar el libro.");
@@ -1125,6 +1180,7 @@ async function eliminarLibroAdmin(idLibro, titulo) {
         await cargarSeccionesInicioAdmin();
         await cargarOfertasAdmin();
         await cargarNovedadesAdmin();
+        await cargarBuscadosQuincenaAdmin();
     } catch (err) {
         console.error("Error eliminando libro:", err);
         alert(`Fallo de red/API: ${err.message}. Revisa que el backend esté corriendo en ${API_ADMIN_URL}`);
@@ -1545,89 +1601,4 @@ function configurarBannerIntermedioAdmin(clave, enlaceDefecto) {
             }
         });
     }
-}
-
-
-
-async function cargarNovedadesAdmin() {
-    if (!listaLibrosNovedadesAdmin) return;
-
-    try {
-        const resp = await fetch(`${API_ADMIN_URL}/api/admin/secciones-libros`);
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
-        const items = await resp.json();
-        const novedades = (Array.isArray(items) ? items : []).filter(x => x.seccion === "pagina_novedades");
-
-        if (novedades.length === 0) {
-            listaLibrosNovedadesAdmin.innerHTML = `<p style="margin:0;color:var(--texto-suave);">No hay libros en la página de Novedades todavía.</p>`;
-            return;
-        }
-
-        listaLibrosNovedadesAdmin.innerHTML = novedades.map(x => `
-            <div class="item-libro" style="padding: 10px 12px; gap: 12px;">
-                <img src="${x.imagen || ""}" alt="Portada de ${x.titulo}" style="width: 48px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid var(--verde-borde); flex-shrink: 0;">
-                <div style="flex: 1; min-width: 0;">
-                    <strong>${x.titulo}</strong> — ${x.autor}
-                    ${x.etiqueta ? `<span style="margin-left:6px;background:var(--dorado);color:#fff;padding:2px 8px;border-radius:999px;font-size:0.78rem;">${x.etiqueta}</span>` : ""}
-                    <br>
-                    <small><strong>$${Number(x.precio || 0).toFixed(2)}</strong> · ID: ${x.idLibro}</small>
-                    ${x.descripcion ? `<br><small>${x.descripcion}</small>` : ""}
-                </div>
-                <button type="button" class="btn-admin btn-peligro btn-quitar-novedad" data-id="${x.idSeccionLibro}" style="padding: 6px 12px;">
-                    Quitar
-                </button>
-            </div>
-        `).join("");
-
-        document.querySelectorAll(".btn-quitar-novedad").forEach(btn => {
-            btn.addEventListener("click", async () => {
-                await quitarLibroDeSeccion(btn.dataset.id);
-                await cargarNovedadesAdmin();
-            });
-        });
-    } catch (err) {
-        console.error("Error cargando novedades:", err);
-        listaLibrosNovedadesAdmin.innerHTML = `<p style="margin:0;color:var(--texto-suave);">Error al cargar novedades.</p>`;
-    }
-}
-
-if (btnAgregarLibroNovedad) {
-    btnAgregarLibroNovedad.addEventListener("click", async () => {
-        const idLibro = selectLibroNovedad?.value || "";
-        if (!idLibro) {
-            alert("Selecciona un libro para agregar a novedades.");
-            return;
-        }
-
-        const etiqueta = (etiquetaNovedadLibro?.value || "").trim();
-        const descripcion = (descripcionNovedadLibro?.value || "").trim();
-
-        try {
-            const resp = await fetch(`${API_ADMIN_URL}/api/admin/secciones-libros`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    Seccion: "pagina_novedades",
-                    IdLibro: idLibro,
-                    Etiqueta: etiqueta || null,
-                    Descripcion: descripcion || null
-                })
-            });
-
-            const data = await resp.json();
-            if (!resp.ok) {
-                alert(data.mensaje || "No se pudo agregar el libro a novedades.");
-                return;
-            }
-
-            alert(data.mensaje || "Libro agregado a novedades.");
-            if (etiquetaNovedadLibro) etiquetaNovedadLibro.value = "";
-            if (descripcionNovedadLibro) descripcionNovedadLibro.value = "";
-            await cargarNovedadesAdmin();
-        } catch (err) {
-            console.error("Error agregando libro a novedades:", err);
-            alert("Error de conexión al agregar a novedades.");
-        }
-    });
 }
