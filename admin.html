@@ -383,6 +383,9 @@
                 <button type="button" id="subtabOfertasAdmin" class="btn-seccion-admin pequena">
                     Ofertas
                 </button>
+                <button type="button" id="subtabNovedadesAdmin" class="btn-seccion-admin pequena">
+                Novedades
+                 </button>
                 <button type="button" id="subtabCatalogoAdmin" class="btn-seccion-admin pequena">
                     Catálogo
                 </button>
@@ -501,6 +504,52 @@
                         <h4 style="margin: 0 0 12px;">Libros actualmente en Ofertas</h4>
                         <div id="listaLibrosOfertasAdmin" class="lista-scroll" style="max-height: 360px;">
                             <p>Cargando ofertas...</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- SUBSECCIÓN NOVEDADES -->
+            <div id="subseccionNovedadesAdmin" style="display: none;">
+                <section class="tarjeta-admin" style="margin-top: 18px;">
+                    <h3>Administrar libros en Novedades</h3>
+
+                    <div class="grid-formulario">
+                        <div class="grupo-campo">
+                            <label for="filtroCategoriaNovedad">Filtrar por categoría</label>
+                            <select id="filtroCategoriaNovedad">
+                                <option value="todas">Todas las categorías</option>
+                            </select>
+                        </div>
+
+                        <div class="grupo-campo">
+                            <label for="selectLibroNovedad">Libro del catálogo</label>
+                            <select id="selectLibroNovedad">
+                                <option value="">Cargando libros...</option>
+                            </select>
+                        </div>
+
+                        <div class="grupo-campo">
+                            <label for="etiquetaNovedadLibro">Etiqueta / insignia (opcional)</label>
+                            <input type="text" id="etiquetaNovedadLibro" placeholder="Ej. ¡Edición Especial!">
+                        </div>
+                    </div>
+
+                    <div class="grupo-campo" style="margin-top: 14px;">
+                        <label for="descripcionNovedadLibro">Sinopsis o características (opcional)</label>
+                        <input type="text" id="descripcionNovedadLibro" placeholder="Escribe una breve descripción o características del libro...">
+                    </div>
+
+                    <div class="barra-guardar">
+                        <button type="button" id="btnAgregarLibroNovedad" class="btn-admin btn-primario">
+                            Agregar a novedades
+                        </button>
+                    </div>
+
+                    <div class="caja-banner-actual" style="margin-top: 18px; margin-bottom: 0;">
+                        <h4 style="margin: 0 0 12px;">Libros actualmente en Novedades</h4>
+                        <div id="listaLibrosNovedadesAdmin" class="lista-scroll" style="max-height: 360px;">
+                            <p>Cargando novedades...</p>
                         </div>
                     </div>
                 </section>

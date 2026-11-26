@@ -38,11 +38,13 @@ const seccionDisenoAdmin = document.getElementById("seccionDisenoAdmin");
 
 const subtabInicioAdmin = document.getElementById("subtabInicioAdmin");
 const subtabOfertasAdmin = document.getElementById("subtabOfertasAdmin");
+const subtabNovedadesAdmin = document.getElementById("subtabNovedadesAdmin");
 const subtabCatalogoAdmin = document.getElementById("subtabCatalogoAdmin");
 const subtabPedidosMensajesAdmin = document.getElementById("subtabPedidosMensajesAdmin");
 
 const subseccionInicioAdmin = document.getElementById("subseccionInicioAdmin");
 const subseccionOfertasAdmin = document.getElementById("subseccionOfertasAdmin");
+const subseccionNovedadesAdmin = document.getElementById("subseccionNovedadesAdmin");
 const subseccionCatalogoAdmin = document.getElementById("subseccionCatalogoAdmin");
 const subseccionPedidosMensajesAdmin = document.getElementById("subseccionPedidosMensajesAdmin");
 
@@ -59,6 +61,13 @@ const precioOfertaLibro = document.getElementById("precioOfertaLibro");
 const resumenCalculoOferta = document.getElementById("resumenCalculoOferta");
 const btnAgregarLibroOferta = document.getElementById("btnAgregarLibroOferta");
 const listaLibrosOfertasAdmin = document.getElementById("listaLibrosOfertasAdmin");
+
+const filtroCategoriaNovedad = document.getElementById("filtroCategoriaNovedad");
+const selectLibroNovedad = document.getElementById("selectLibroNovedad");
+const etiquetaNovedadLibro = document.getElementById("etiquetaNovedadLibro");
+const descripcionNovedadLibro = document.getElementById("descripcionNovedadLibro");
+const btnAgregarLibroNovedad = document.getElementById("btnAgregarLibroNovedad");
+const listaLibrosNovedadesAdmin = document.getElementById("listaLibrosNovedadesAdmin");
 
 const vistaPreviaBannerActual = document.getElementById("vistaPreviaBannerActual");
 const inputArchivoBannerPopup = document.getElementById("inputArchivoBannerPopup");
@@ -107,6 +116,7 @@ function configurarSubseccionesGestion() {
     const tabs = [
         { btn: subtabInicioAdmin, panel: subseccionInicioAdmin, onOpen: cargarSeccionesInicioAdmin },
         { btn: subtabOfertasAdmin, panel: subseccionOfertasAdmin, onOpen: cargarOfertasAdmin },
+        { btn: subtabNovedadesAdmin, panel: subseccionNovedadesAdmin, onOpen: cargarNovedadesAdmin },
         { btn: subtabCatalogoAdmin, panel: subseccionCatalogoAdmin, onOpen: cargarLibrosAdmin },
         { btn: subtabPedidosMensajesAdmin, panel: subseccionPedidosMensajesAdmin, onOpen: async () => {
             await cargarPedidosAdmin();
@@ -140,6 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarMensajesAdmin();
     cargarSeccionesInicioAdmin();
     cargarOfertasAdmin();
+    cargarNovedadesAdmin();
     cargarBannerPopupAdmin();
     cargarBannersIntermediosAdmin();
 });
@@ -175,6 +186,12 @@ if (filtroCategoriaOferta) {
 
 if (selectLibroOferta) {
     selectLibroOferta.addEventListener("change", autocompletarPrecioLibroOferta);
+}
+
+if (filtroCategoriaNovedad) {
+    filtroCategoriaNovedad.addEventListener("change", () => {
+        llenarSelectLibrosNovedad(todosLosLibrosAdmin);
+    });
 }
 
 function autocompletarPrecioLibroOferta() {
@@ -643,6 +660,41 @@ function llenarSelectLibrosOferta(libros) {
         filtrados.map(l => `<option value="${l.id}">${l.titulo} — ${l.autor} ($${Number(l.precio || 0).toFixed(2)})</option>`).join("");
 }
 
+function llenarFiltroCategoriasNovedad(libros) {
+    if (!filtroCategoriaNovedad) return;
+
+    const valorActual = filtroCategoriaNovedad.value;
+    const categoriasUnicas = obtenerCategoriasUnicas(libros);
+
+    filtroCategoriaNovedad.innerHTML =
+        `<option value="todas">Todas las categorías</option>` +
+        categoriasUnicas.map(cat => `<option value="${cat}">${cat}</option>`).join("");
+
+    if (categoriasUnicas.includes(valorActual)) {
+        filtroCategoriaNovedad.value = valorActual;
+    }
+}
+
+function llenarSelectLibrosNovedad(libros) {
+    if (!selectLibroNovedad) return;
+
+    const categoriaElegida = filtroCategoriaNovedad?.value || "todas";
+    const listaBase = Array.isArray(libros) ? libros : [];
+
+    const filtrados = categoriaElegida === "todas"
+        ? listaBase
+        : listaBase.filter(l => (l.categoria || "").trim().toLowerCase() === categoriaElegida.toLowerCase());
+
+    if (filtrados.length === 0) {
+        selectLibroNovedad.innerHTML = `<option value="">No hay libros en esta categoría</option>`;
+        return;
+    }
+
+    selectLibroNovedad.innerHTML =
+        `<option value="">Selecciona un libro...</option>` +
+        filtrados.map(l => `<option value="${l.id}">${l.titulo} — ${l.autor}</option>`).join("");
+}
+
 function renderizarLibrosFiltrados() {
     if (!listaLibrosAdmin) return;
 
@@ -717,6 +769,8 @@ async function cargarLibrosAdmin() {
         llenarFiltroCategoriasOferta(todosLosLibrosAdmin);
         llenarSelectLibrosOferta(todosLosLibrosAdmin);
         autocompletarPrecioLibroOferta();
+        llenarFiltroCategoriasNovedad(todosLosLibrosAdmin);
+        llenarSelectLibrosNovedad(todosLosLibrosAdmin);
         renderizarLibrosFiltrados();
     } catch (err) {
         console.error("Error cargando libros admin:", err);
@@ -937,6 +991,89 @@ if (btnAgregarLibroOferta) {
     });
 }
 
+async function cargarNovedadesAdmin() {
+    if (!listaLibrosNovedadesAdmin) return;
+
+    try {
+        const resp = await fetch(`${API_ADMIN_URL}/api/admin/secciones-libros`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+        const items = await resp.json();
+        const novedades = (Array.isArray(items) ? items : []).filter(x => x.seccion === "novedades");
+
+        if (novedades.length === 0) {
+            listaLibrosNovedadesAdmin.innerHTML = `<p style="margin:0;color:var(--texto-suave);">No hay libros en novedades todavía.</p>`;
+            return;
+        }
+
+        listaLibrosNovedadesAdmin.innerHTML = novedades.map(x => `
+            <div class="item-libro" style="padding: 10px 12px; gap: 12px;">
+                <img src="${x.imagen || ""}" alt="Portada de ${x.titulo}" style="width: 48px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid var(--verde-borde); flex-shrink: 0;">
+                <div style="flex: 1; min-width: 0;">
+                    <strong>${x.titulo}</strong> — ${x.autor}
+                    ${x.etiqueta ? `<span style="margin-left:6px;background:var(--dorado);color:#fff;padding:2px 8px;border-radius:999px;font-size:0.78rem;">${x.etiqueta}</span>` : ""}
+                    <br>
+                    <small><strong>$${Number(x.precio || 0).toFixed(2)}</strong> · ID: ${x.idLibro}</small>
+                    ${x.descripcion ? `<br><small>${x.descripcion}</small>` : ""}
+                </div>
+                <button type="button" class="btn-admin btn-peligro btn-quitar-novedad" data-id="${x.idSeccionLibro}" style="padding: 6px 12px;">
+                    Quitar
+                </button>
+            </div>
+        `).join("");
+
+        document.querySelectorAll(".btn-quitar-novedad").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                await quitarLibroDeSeccion(btn.dataset.id);
+                await cargarNovedadesAdmin();
+            });
+        });
+    } catch (err) {
+        console.error("Error cargando novedades:", err);
+        listaLibrosNovedadesAdmin.innerHTML = `<p style="margin:0;color:var(--texto-suave);">Error al cargar novedades.</p>`;
+    }
+}
+
+if (btnAgregarLibroNovedad) {
+    btnAgregarLibroNovedad.addEventListener("click", async () => {
+        const idLibro = selectLibroNovedad?.value || "";
+        if (!idLibro) {
+            alert("Selecciona un libro para agregar a novedades.");
+            return;
+        }
+
+        const etiqueta = (etiquetaNovedadLibro?.value || "").trim();
+        const descripcion = (descripcionNovedadLibro?.value || "").trim();
+
+        try {
+            const resp = await fetch(`${API_ADMIN_URL}/api/admin/secciones-libros`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    Seccion: "novedades",
+                    IdLibro: idLibro,
+                    Etiqueta: etiqueta || null,
+                    Descripcion: descripcion || null
+                })
+            });
+
+            const data = await resp.json();
+            if (!resp.ok) {
+                alert(data.mensaje || "No se pudo agregar el libro a novedades.");
+                return;
+            }
+
+            alert(data.mensaje || "Libro agregado a novedades.");
+            if (etiquetaNovedadLibro) etiquetaNovedadLibro.value = "";
+            if (descripcionNovedadLibro) descripcionNovedadLibro.value = "";
+            await cargarNovedadesAdmin();
+        } catch (err) {
+            console.error("Error agregando libro a novedades:", err);
+            alert("Error de conexión al agregar a novedades.");
+        }
+    });
+}
+
 async function quitarLibroDeSeccion(idSeccionLibro) {
     if (!confirm("¿Deseas quitar este libro del apartado?")) return;
 
@@ -953,6 +1090,7 @@ async function quitarLibroDeSeccion(idSeccionLibro) {
 
         await cargarSeccionesInicioAdmin();
         await cargarOfertasAdmin();
+        await cargarNovedadesAdmin();
     } catch (err) {
         console.error("Error quitando libro de sección:", err);
         alert("Error de conexión al quitar el libro.");
@@ -986,6 +1124,7 @@ async function eliminarLibroAdmin(idLibro, titulo) {
         await cargarLibrosAdmin();
         await cargarSeccionesInicioAdmin();
         await cargarOfertasAdmin();
+        await cargarNovedadesAdmin();
     } catch (err) {
         console.error("Error eliminando libro:", err);
         alert(`Fallo de red/API: ${err.message}. Revisa que el backend esté corriendo en ${API_ADMIN_URL}`);
@@ -1406,4 +1545,89 @@ function configurarBannerIntermedioAdmin(clave, enlaceDefecto) {
             }
         });
     }
+}
+
+
+
+async function cargarNovedadesAdmin() {
+    if (!listaLibrosNovedadesAdmin) return;
+
+    try {
+        const resp = await fetch(`${API_ADMIN_URL}/api/admin/secciones-libros`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+        const items = await resp.json();
+        const novedades = (Array.isArray(items) ? items : []).filter(x => x.seccion === "pagina_novedades");
+
+        if (novedades.length === 0) {
+            listaLibrosNovedadesAdmin.innerHTML = `<p style="margin:0;color:var(--texto-suave);">No hay libros en la página de Novedades todavía.</p>`;
+            return;
+        }
+
+        listaLibrosNovedadesAdmin.innerHTML = novedades.map(x => `
+            <div class="item-libro" style="padding: 10px 12px; gap: 12px;">
+                <img src="${x.imagen || ""}" alt="Portada de ${x.titulo}" style="width: 48px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid var(--verde-borde); flex-shrink: 0;">
+                <div style="flex: 1; min-width: 0;">
+                    <strong>${x.titulo}</strong> — ${x.autor}
+                    ${x.etiqueta ? `<span style="margin-left:6px;background:var(--dorado);color:#fff;padding:2px 8px;border-radius:999px;font-size:0.78rem;">${x.etiqueta}</span>` : ""}
+                    <br>
+                    <small><strong>$${Number(x.precio || 0).toFixed(2)}</strong> · ID: ${x.idLibro}</small>
+                    ${x.descripcion ? `<br><small>${x.descripcion}</small>` : ""}
+                </div>
+                <button type="button" class="btn-admin btn-peligro btn-quitar-novedad" data-id="${x.idSeccionLibro}" style="padding: 6px 12px;">
+                    Quitar
+                </button>
+            </div>
+        `).join("");
+
+        document.querySelectorAll(".btn-quitar-novedad").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                await quitarLibroDeSeccion(btn.dataset.id);
+                await cargarNovedadesAdmin();
+            });
+        });
+    } catch (err) {
+        console.error("Error cargando novedades:", err);
+        listaLibrosNovedadesAdmin.innerHTML = `<p style="margin:0;color:var(--texto-suave);">Error al cargar novedades.</p>`;
+    }
+}
+
+if (btnAgregarLibroNovedad) {
+    btnAgregarLibroNovedad.addEventListener("click", async () => {
+        const idLibro = selectLibroNovedad?.value || "";
+        if (!idLibro) {
+            alert("Selecciona un libro para agregar a novedades.");
+            return;
+        }
+
+        const etiqueta = (etiquetaNovedadLibro?.value || "").trim();
+        const descripcion = (descripcionNovedadLibro?.value || "").trim();
+
+        try {
+            const resp = await fetch(`${API_ADMIN_URL}/api/admin/secciones-libros`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    Seccion: "pagina_novedades",
+                    IdLibro: idLibro,
+                    Etiqueta: etiqueta || null,
+                    Descripcion: descripcion || null
+                })
+            });
+
+            const data = await resp.json();
+            if (!resp.ok) {
+                alert(data.mensaje || "No se pudo agregar el libro a novedades.");
+                return;
+            }
+
+            alert(data.mensaje || "Libro agregado a novedades.");
+            if (etiquetaNovedadLibro) etiquetaNovedadLibro.value = "";
+            if (descripcionNovedadLibro) descripcionNovedadLibro.value = "";
+            await cargarNovedadesAdmin();
+        } catch (err) {
+            console.error("Error agregando libro a novedades:", err);
+            alert("Error de conexión al agregar a novedades.");
+        }
+    });
 }

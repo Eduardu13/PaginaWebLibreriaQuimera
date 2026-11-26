@@ -14,7 +14,6 @@
 
     <link rel="stylesheet" href="stylecatalogo.css">
 
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 </head>
@@ -43,7 +42,7 @@
                         </a>
 
                         <a href="carrito.html" class="BotonCarro">
-                            <i class="fa-solid fa-cart-arrow-down"> </i> <span style="margin-left: 10px;">Carrito </span> <span id="numerito" class="numerito"> 0 </strong> </span>
+                            <i class="fa-solid fa-cart-arrow-down"> </i> <span style="margin-left: 10px;">Carrito </span> <span id="numerito" class="numerito"> 0 </span>
                         </a>
                     </div>
                 </div>
@@ -71,41 +70,13 @@
             <h3 class="subtitulo-seccion">Lanzamientos de la Semana</h3>
             
             <div class="carrusel-lanzamientos-contenedor">
-                <button class="flecha-carrusel izquierdo" onclick="cambiarLanzamiento(-1)"><i class="bi bi-chevron-left"></i></button>
+                <button type="button" class="flecha-carrusel izquierdo" onclick="cambiarLanzamiento(-1)"><i class="bi bi-chevron-left"></i></button>
                 
-                <div class="bloque-destacado">
-                    
-                    <div class="tarjeta-destacada-horizontal activa">
-                        <div class="contenedor-foto-destacada">
-                            <img src="./img/libro41.jpg" alt="Libro 1">
-                        </div>
-                        <div class="detalles-grandes">
-                            <span class="insignia-novedad"><i class="bi bi-star-fill"></i> ¡Edición Especial!</span>
-                            <h3 class="titulo-libro">El Libro Salvaje</h3>
-                            <p class="autor-libro">Juan Villoro</p>
-                            <p class="sinopsis-libro">Narra la historia de Juan, un adolescente de 13 años enviado a vivir temporalmente con su tío Tito, un excéntrico y solitario bibliófilo, debido al divorcio de sus padres. En medio de una inmensa y laberíntica biblioteca, Juan asume la misión de encontrar un volumen rebelde que parece resistirse a la lectura, descubriendo la magia de los libros que eligen a sus propios lectores.</p>
-                            <p class="precio-libro">$87.00</p>
-                            <button class="producto-agregar" id="libroFantasia-01" >AGREGAR</button>
-                        </div>
-                    </div>
-
-                    <div class="tarjeta-destacada-horizontal">
-                        <div class="contenedor-foto-destacada">
-                            <img src="./img/libro57.jpg" alt="Libro 2">
-                        </div>
-                        <div class="detalles-grandes">
-                            <span class="insignia-novedad"><i class="bi bi-lightning-fill"></i> ¡Más Vendido!</span>
-                            <h3 class="titulo-libro">Eragon</h3>
-                            <p class="autor-libro">Christopher Paolini</p>
-                            <p class="sinopsis-libro">la primera novela de la saga El legado de Christopher Paolini, sigue a un joven granjero huérfano de 15 años que encuentra un misterioso huevo azul en las montañas. Del huevo nace una dragona, Saphira, convirtiéndolo en un legendario Jinete de Dragón. Juntos, deben huir y unirse a los rebeldes para derrotar al malvado rey Galbatorix.</p>
-                            <p class="precio-libro">$129.00</p>
-                            <button class="producto-agregar" id="libroFantasia-17">AGREGAR</button>
-                        </div>
-                    </div>
-
+                <div class="bloque-destacado" id="bloqueNovedadesDestacadas">
+                    <p style="text-align: center; width: 100%;">Cargando novedades...</p>
                 </div>
 
-                <button class="flecha-carrusel derecho" onclick="cambiarLanzamiento(1)"><i class="bi bi-chevron-right"></i></button>
+                <button type="button" class="flecha-carrusel derecho" onclick="cambiarLanzamiento(1)"><i class="bi bi-chevron-right"></i></button>
             </div>
         </section>
 
@@ -153,7 +124,7 @@
             </div>
 
             <div class="contenedor-ver-mas-top">
-                <button class="boton-cargar-top" id="boton-tendencias" onclick="mostrarMasTendencias()">Ver más tendencias <i class="bi bi-arrow-down-short"></i></button>
+                <button type="button" class="boton-cargar-top" id="boton-tendencias" onclick="mostrarMasTendencias()">Ver más tendencias <i class="bi bi-arrow-down-short"></i></button>
             </div>
         </section>
 
@@ -172,8 +143,181 @@
         </section>
 
     </div>
+
     <script src="scriptCatalogo.js"></script>
     <script src="scriptNovedades.js"></script>
     <script src="scriptBarRebelde.js"></script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        const bloqueDestacado = document.getElementById("bloqueNovedadesDestacadas");
+        if (!bloqueDestacado) return;
+
+        function obtenerCarritoLS() {
+            const raw = localStorage.getItem("libros-en-carrito");
+            if (!raw) return [];
+            try {
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function guardarCarritoLS(carrito) {
+            localStorage.setItem("libros-en-carrito", JSON.stringify(carrito));
+            const total = carrito.reduce((acc, prod) => acc + (Number(prod.cantidad) || 1), 0);
+            const num = document.getElementById("numerito");
+            if (num) num.innerText = total;
+        }
+
+        guardarCarritoLS(obtenerCarritoLS());
+
+        function calcularOfertaItem(precioBase, ofertaData) {
+            const precioNormal = Number(precioBase || 0);
+            if (!ofertaData) {
+                return { tieneOferta: false, precioFinal: precioNormal, pct: 0, ahorro: 0 };
+            }
+
+            const precioOfertaBD = ofertaData.precioOferta != null && ofertaData.precioOferta !== ""
+                ? Number(ofertaData.precioOferta)
+                : null;
+            const descuentoBD = ofertaData.descuento != null && ofertaData.descuento !== ""
+                ? Number(ofertaData.descuento)
+                : null;
+
+            let precioFinal = precioNormal;
+            let pct = 0;
+
+            if (descuentoBD != null && !Number.isNaN(descuentoBD) && descuentoBD > 0) {
+                pct = descuentoBD;
+                precioFinal = precioOfertaBD != null && !Number.isNaN(precioOfertaBD)
+                    ? precioOfertaBD
+                    : precioNormal * (1 - descuentoBD / 100);
+            } else if (precioOfertaBD != null && !Number.isNaN(precioOfertaBD)) {
+                precioFinal = precioOfertaBD;
+                if (precioNormal > 0 && precioOfertaBD < precioNormal) {
+                    pct = Math.round(((precioNormal - precioOfertaBD) / precioNormal) * 100);
+                }
+            }
+
+            const tieneDescuento = precioFinal < precioNormal;
+            const ahorro = tieneDescuento ? precioNormal - precioFinal : 0;
+            if (tieneDescuento && !pct && precioNormal > 0) {
+                pct = Math.round((ahorro / precioNormal) * 100);
+            }
+
+            return {
+                tieneOferta: tieneDescuento || ofertaData.seccion === "ofertas",
+                precioFinal: Number(precioFinal.toFixed(2)),
+                pct,
+                ahorro
+            };
+        }
+
+        try {
+            const resp = await fetch("https://localhost:7270/api/admin/secciones-libros");
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+            const items = await resp.json();
+            const lista = Array.isArray(items) ? items : [];
+
+            const mapaOfertas = new Map();
+            lista
+                .filter(x => x.seccion === "ofertas")
+                .forEach(x => mapaOfertas.set(String(x.idLibro), x));
+
+            const novedades = lista.filter(x => x.seccion === "pagina_novedades");
+
+            if (novedades.length === 0) {
+                bloqueDestacado.innerHTML = `<p style="text-align: center; width: 100%;">No hay libros en novedades todavía.</p>`;
+                return;
+            }
+
+            bloqueDestacado.innerHTML = novedades.map((item, idx) => {
+                const etiqueta = (item.etiqueta || "").trim();
+                const descripcion = (item.descripcion || "").trim();
+                const precioNormal = Number(item.precio || 0);
+                const oferta = calcularOfertaItem(precioNormal, mapaOfertas.get(String(item.idLibro)));
+                const precioFinal = oferta.precioFinal;
+
+                const tituloEsc = (item.titulo || "").replace(/"/g, "&quot;");
+                const autorEsc = (item.autor || "").replace(/"/g, "&quot;");
+                const imgEsc = (item.imagen || "").replace(/"/g, "&quot;");
+
+                const htmlPrecio = oferta.tieneOferta && precioFinal < precioNormal
+                    ? `<p class="precio-libro">
+                           <span style="text-decoration: line-through; color: #888; font-size: 0.85em; margin-right: 8px;">$${precioNormal.toFixed(2)}</span>
+                           <strong style="color: #c9302c;">$${precioFinal.toFixed(2)}</strong>
+                           <small style="display:block; font-size:0.8rem; color:#c9302c;">-${oferta.pct}% (ahorro de $${oferta.ahorro.toFixed(2)})</small>
+                       </p>`
+                    : `<p class="precio-libro">$${precioNormal.toFixed(2)}</p>`;
+
+                return `
+                    <div class="tarjeta-destacada-horizontal ${idx === 0 ? "activa" : ""}">
+                        <div class="contenedor-foto-destacada">
+                            <img src="${imgEsc}" alt="${tituloEsc}">
+                        </div>
+                        <div class="detalles-grandes">
+                            ${etiqueta ? `<span class="insignia-novedad"><i class="bi bi-star-fill"></i> ${etiqueta}</span>` : ""}
+                            ${oferta.tieneOferta ? `<span class="insignia-novedad" style="background:#c9302c;color:#fff;margin-left:6px;">¡En Oferta!</span>` : ""}
+                            <h3 class="titulo-libro">${item.titulo}</h3>
+                            <p class="autor-libro">${item.autor}</p>
+                            ${descripcion ? `<p class="sinopsis-libro">${descripcion}</p>` : ""}
+                            ${htmlPrecio}
+                            <button
+                                type="button"
+                                class="producto-agregar btn-novedad-agregar"
+                                data-id="${item.idLibro}"
+                                data-titulo="${tituloEsc}"
+                                data-autor="${autorEsc}"
+                                data-precio="${precioFinal}"
+                                data-imagen="${imgEsc}"
+                            >AGREGAR</button>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+
+            bloqueDestacado.querySelectorAll(".btn-novedad-agregar").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const id = btn.dataset.id;
+                    const titulo = btn.dataset.titulo;
+                    const autor = btn.dataset.autor;
+                    const precio = Number(btn.dataset.precio || 0);
+                    const imagen = btn.dataset.imagen;
+
+                    const desdeCatalogo = Array.isArray(window.LibrosArray)
+                        ? window.LibrosArray.find(l => String(l.id) === String(id))
+                        : null;
+
+                    const carrito = obtenerCarritoLS();
+                    const indice = carrito.findIndex(p => String(p.id) === String(id));
+
+                    if (indice !== -1) {
+                        carrito[indice].cantidad = (Number(carrito[indice].cantidad) || 1) + 1;
+                        carrito[indice].precio = precio;
+                    } else {
+                        carrito.push({
+                            ...(desdeCatalogo || {}),
+                            id,
+                            titulo,
+                            autor,
+                            precio,
+                            imagen,
+                            cantidad: 1
+                        });
+                    }
+
+                    guardarCarritoLS(carrito);
+                    alert(`¡"${titulo}" se agregó a tu carrito correctamente!`);
+                });
+            });
+        } catch (err) {
+            console.error("Error cargando novedades:", err);
+            bloqueDestacado.innerHTML = `<p style="text-align: center; width: 100%;">Error al cargar las novedades.</p>`;
+        }
+    });
+    </script>
 </body>
 </html>
