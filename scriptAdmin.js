@@ -31,7 +31,20 @@ const btnGuardarEdicionLibro = document.getElementById("btnGuardarEdicionLibro")
 const listaMensajesAdmin = document.getElementById("listaMensajesAdmin");
 const btnRecargarMensajes = document.getElementById("btnRecargarMensajes");
 
+const tabGestionAdmin = document.getElementById("tabGestionAdmin");
+const tabDisenoAdmin = document.getElementById("tabDisenoAdmin");
+const seccionGestionAdmin = document.getElementById("seccionGestionAdmin");
+const seccionDisenoAdmin = document.getElementById("seccionDisenoAdmin");
+
+const vistaPreviaBannerActual = document.getElementById("vistaPreviaBannerActual");
+const inputArchivoBannerPopup = document.getElementById("inputArchivoBannerPopup");
+const inputUrlBannerPopup = document.getElementById("inputUrlBannerPopup");
+const inputEnlaceBannerPopup = document.getElementById("inputEnlaceBannerPopup");
+const btnGuardarBannerPopup = document.getElementById("btnGuardarBannerPopup");
+const btnQuitarBannerActual = document.getElementById("btnQuitarBannerActual");
+
 let todosLosLibrosAdmin = [];
+let imagenBannerTemporal = "";
 
 function leerArchivoBase64(archivo) {
     return new Promise((resolve, reject) => {
@@ -42,10 +55,32 @@ function leerArchivoBase64(archivo) {
     });
 }
 
+function configurarSeccionesAdmin() {
+    if (!tabGestionAdmin || !tabDisenoAdmin || !seccionGestionAdmin || !seccionDisenoAdmin) return;
+
+    tabGestionAdmin.addEventListener("click", () => {
+        seccionGestionAdmin.style.display = "block";
+        seccionDisenoAdmin.style.display = "none";
+        tabGestionAdmin.classList.add("activa");
+        tabDisenoAdmin.classList.remove("activa");
+    });
+
+    tabDisenoAdmin.addEventListener("click", async () => {
+        seccionGestionAdmin.style.display = "none";
+        seccionDisenoAdmin.style.display = "block";
+        tabDisenoAdmin.classList.add("activa");
+        tabGestionAdmin.classList.remove("activa");
+        await cargarBannerPopupAdmin();
+    });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+    configurarSeccionesAdmin();
     cargarCategoriasAdmin();
     cargarPedidosAdmin();
     cargarLibrosAdmin();
+    cargarMensajesAdmin();
+    cargarBannerPopupAdmin();
 });
 
 if (btnRecargarPedidos) {
@@ -64,7 +99,6 @@ if (filtroCategoriaAdmin) {
     filtroCategoriaAdmin.addEventListener("change", renderizarLibrosFiltrados);
 }
 
-cargarMensajesAdmin();
 if (btnRecargarMensajes) {
     btnRecargarMensajes.addEventListener("click", cargarMensajesAdmin);
 }
@@ -558,9 +592,6 @@ async function actualizarEstadoPedido(idPedido, nuevoEstado) {
     }
 }
 
-
-
-
 async function cargarMensajesAdmin() {
     if (!listaMensajesAdmin) return;
     listaMensajesAdmin.innerHTML = "<p>Cargando mensajes...</p>";
@@ -648,4 +679,121 @@ async function enviarRespuestaMensaje(idMensaje) {
         console.error("Error enviando respuesta:", err);
         alert("Error de conexión al enviar respuesta.");
     }
+}
+
+async function cargarBannerPopupAdmin() {
+    if (!vistaPreviaBannerActual) return;
+
+    try {
+        const resp = await fetch(`${API_ADMIN_URL}/api/banner-popup`);
+        if (!resp.ok) {
+            vistaPreviaBannerActual.innerHTML = `<p style="margin:0;color:var(--texto-suave);">No se pudo consultar el banner actual.</p>`;
+            return;
+        }
+
+        const data = await resp.json();
+        imagenBannerTemporal = data.imagenUrl || "";
+
+        if (inputUrlBannerPopup) {
+            inputUrlBannerPopup.value = data.imagenUrl && !data.imagenUrl.startsWith("data:") ? data.imagenUrl : "";
+        }
+        if (inputEnlaceBannerPopup) {
+            inputEnlaceBannerPopup.value = data.enlaceUrl || "ofertas.html";
+        }
+
+        if (data.activo && data.imagenUrl) {
+            vistaPreviaBannerActual.innerHTML = `
+                <img src="${data.imagenUrl}" alt="Banner emergente actual">
+                <p style="margin:0;font-size:0.92rem;color:var(--texto-suave);">
+                    <strong>Enlace:</strong> ${data.enlaceUrl || "ofertas.html"}
+                </p>
+            `;
+        } else {
+            vistaPreviaBannerActual.innerHTML = `<p style="margin:0;color:var(--texto-suave);">No hay banner activo actualmente.</p>`;
+        }
+    } catch (err) {
+        console.error("Error cargando banner popup:", err);
+        vistaPreviaBannerActual.innerHTML = `<p style="margin:0;color:var(--texto-suave);">Error al cargar el banner.</p>`;
+    }
+}
+
+if (inputArchivoBannerPopup) {
+    inputArchivoBannerPopup.addEventListener("change", async (e) => {
+        const archivo = e.target.files?.[0];
+        if (!archivo) return;
+
+        imagenBannerTemporal = await leerArchivoBase64(archivo);
+        if (inputUrlBannerPopup) inputUrlBannerPopup.value = "";
+    });
+}
+
+if (btnGuardarBannerPopup) {
+    btnGuardarBannerPopup.addEventListener("click", async () => {
+        const urlEscrita = (inputUrlBannerPopup?.value || "").trim();
+        const imagenFinal = urlEscrita || imagenBannerTemporal;
+        const enlaceFinal = (inputEnlaceBannerPopup?.value || "").trim() || "ofertas.html";
+
+        if (!imagenFinal) {
+            alert("Selecciona una imagen o escribe el nombre/ruta del banner.");
+            return;
+        }
+
+        try {
+            const resp = await fetch(`${API_ADMIN_URL}/api/banner-popup`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    ImagenUrl: imagenFinal,
+                    EnlaceUrl: enlaceFinal,
+                    Activo: true
+                })
+            });
+
+            const data = await resp.json();
+            if (!resp.ok) {
+                alert(data.mensaje || "No se pudo guardar el banner.");
+                return;
+            }
+
+            alert(data.mensaje || "Banner actualizado correctamente.");
+            if (inputArchivoBannerPopup) inputArchivoBannerPopup.value = "";
+            await cargarBannerPopupAdmin();
+        } catch (err) {
+            console.error("Error guardando banner:", err);
+            alert("Error de conexión al guardar el banner.");
+        }
+    });
+}
+
+if (btnQuitarBannerActual) {
+    btnQuitarBannerActual.addEventListener("click", async () => {
+        if (!confirm("¿Deseas quitar el banner emergente actual?")) return;
+
+        try {
+            const resp = await fetch(`${API_ADMIN_URL}/api/banner-popup`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    ImagenUrl: null,
+                    EnlaceUrl: (inputEnlaceBannerPopup?.value || "").trim() || "ofertas.html",
+                    Activo: false
+                })
+            });
+
+            const data = await resp.json();
+            if (!resp.ok) {
+                alert(data.mensaje || "No se pudo quitar el banner.");
+                return;
+            }
+
+            alert(data.mensaje || "Banner quitado.");
+            imagenBannerTemporal = "";
+            if (inputUrlBannerPopup) inputUrlBannerPopup.value = "";
+            if (inputArchivoBannerPopup) inputArchivoBannerPopup.value = "";
+            await cargarBannerPopupAdmin();
+        } catch (err) {
+            console.error("Error quitando banner:", err);
+            alert("Error de conexión al quitar el banner.");
+        }
+    });
 }

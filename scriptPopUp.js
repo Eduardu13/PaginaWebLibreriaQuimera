@@ -1,18 +1,32 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const modal = document.getElementById("ModalOferta");
     const botonCerrar = document.getElementById("CerrarModal");
+    if (!modal || !botonCerrar) return;
 
-    // Verifica si el modal ya se mostró en esta sesión
-    if (!sessionStorage.getItem("popupMostrado")) {
-        // Muestra el modal después de 1 segundo de entrar a la página
-        setTimeout(() => {
-            modal.style.display = "flex";
-        }, 1000);
-    }
+    const imgBanner = modal.querySelector("img");
+    const linkBanner = modal.querySelector("a");
 
-    // Al hacer clic en cerrar, oculta el modal y guarda el registro
     botonCerrar.addEventListener("click", () => {
         modal.style.display = "none";
         sessionStorage.setItem("popupMostrado", "true");
     });
+
+    if (sessionStorage.getItem("popupMostrado")) return;
+
+    try {
+        const resp = await fetch("https://localhost:7270/api/banner-popup");
+        if (!resp.ok) return;
+
+        const data = await resp.json();
+        if (!data.activo || !data.imagenUrl) return;
+
+        if (imgBanner) imgBanner.src = data.imagenUrl;
+        if (linkBanner && data.enlaceUrl) linkBanner.href = data.enlaceUrl;
+
+        setTimeout(() => {
+            modal.style.display = "flex";
+        }, 1000);
+    } catch (err) {
+        console.error("Error cargando banner popup:", err);
+    }
 });
