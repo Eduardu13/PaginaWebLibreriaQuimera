@@ -20,8 +20,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         const data = await resp.json();
         if (!data.activo || !data.imagenUrl) return;
 
-        if (imgBanner) imgBanner.src = data.imagenUrl;
-        if (linkBanner && data.enlaceUrl) linkBanner.href = data.enlaceUrl;
+        if (imgBanner) {
+            imgBanner.onerror = () => {
+                modal.style.display = "none";
+            };
+            imgBanner.src = data.imagenUrl;
+        }
+
+        if (linkBanner && data.enlaceUrl) {
+            linkBanner.href = data.enlaceUrl;
+        }
 
         setTimeout(() => {
             modal.style.display = "flex";

@@ -724,17 +724,26 @@ if (inputArchivoBannerPopup) {
 
         imagenBannerTemporal = await leerArchivoBase64(archivo);
         if (inputUrlBannerPopup) inputUrlBannerPopup.value = "";
+
+        if (vistaPreviaBannerActual) {
+            vistaPreviaBannerActual.innerHTML = `
+                <img src="${imagenBannerTemporal}" alt="Vista previa del nuevo banner">
+                <p style="margin:0;font-size:0.9rem;color:var(--texto-suave);">
+                    Imagen lista para guardar: <strong>${archivo.name}</strong>
+                </p>
+            `;
+        }
     });
 }
 
 if (btnGuardarBannerPopup) {
     btnGuardarBannerPopup.addEventListener("click", async () => {
         const urlEscrita = (inputUrlBannerPopup?.value || "").trim();
-        const imagenFinal = urlEscrita || imagenBannerTemporal;
+        const imagenFinal = imagenBannerTemporal || urlEscrita;
         const enlaceFinal = (inputEnlaceBannerPopup?.value || "").trim() || "ofertas.html";
 
         if (!imagenFinal) {
-            alert("Selecciona una imagen o escribe el nombre/ruta del banner.");
+            alert("Selecciona una imagen desde tu equipo o escribe la ruta del banner.");
             return;
         }
 
@@ -756,11 +765,12 @@ if (btnGuardarBannerPopup) {
             }
 
             alert(data.mensaje || "Banner actualizado correctamente.");
+            imagenBannerTemporal = "";
             if (inputArchivoBannerPopup) inputArchivoBannerPopup.value = "";
             await cargarBannerPopupAdmin();
         } catch (err) {
             console.error("Error guardando banner:", err);
-            alert("Error de conexión al guardar el banner.");
+            alert("Error al guardar: " + err.message);
         }
     });
 }
