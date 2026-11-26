@@ -28,6 +28,9 @@ const editarStockLibro = document.getElementById("editarStockLibro");
 const btnCancelarEdicion = document.getElementById("btnCancelarEdicion");
 const btnGuardarEdicionLibro = document.getElementById("btnGuardarEdicionLibro");
 
+const listaMensajesAdmin = document.getElementById("listaMensajesAdmin");
+const btnRecargarMensajes = document.getElementById("btnRecargarMensajes");
+
 let todosLosLibrosAdmin = [];
 
 function leerArchivoBase64(archivo) {
@@ -59,6 +62,11 @@ if (buscarLibroAdmin) {
 
 if (filtroCategoriaAdmin) {
     filtroCategoriaAdmin.addEventListener("change", renderizarLibrosFiltrados);
+}
+
+cargarMensajesAdmin();
+if (btnRecargarMensajes) {
+    btnRecargarMensajes.addEventListener("click", cargarMensajesAdmin);
 }
 
 if (btnCerrarSesionAdmin) {
@@ -547,5 +555,97 @@ async function actualizarEstadoPedido(idPedido, nuevoEstado) {
     } catch (err) {
         console.error("Error actualizando estado:", err);
         alert("Error de conexión al actualizar el estado.");
+    }
+}
+
+
+
+
+async function cargarMensajesAdmin() {
+    if (!listaMensajesAdmin) return;
+    listaMensajesAdmin.innerHTML = "<p>Cargando mensajes...</p>";
+
+    try {
+        const resp = await fetch(`${API_ADMIN_URL}/api/admin/mensajes`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+        const mensajes = await resp.json();
+        if (!Array.isArray(mensajes) || mensajes.length === 0) {
+            listaMensajesAdmin.innerHTML = "<p>No hay mensajes de contacto aún.</p>";
+            return;
+        }
+
+        listaMensajesAdmin.innerHTML = mensajes.map(m => {
+            const yaRespondido = m.respuestaAdmin && m.respuestaAdmin.trim() !== "";
+            const badgeEstado = yaRespondido
+                ? `<span style="background: var(--verde-oliva); color: #fff; padding: 2px 8px; border-radius: 6px; font-size: 0.8rem;">Respondido</span>`
+                : `<span style="background: var(--dorado); color: #1f3541; padding: 2px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold;">Pendiente</span>`;
+
+            return `
+                <div class="item-pedido" style="border-left-color: ${yaRespondido ? 'var(--verde-oliva)' : 'var(--guinda)'};">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <p><strong>${m.nombre}</strong> (${m.correo}) ${m.telefono ? `| Tel: ${m.telefono}` : ""}</p>
+                        ${badgeEstado}
+                    </div>
+                    <p><small>Enviado el: ${m.fechaEnvio}</small></p>
+                    <p style="background: #fff; padding: 10px; border-radius: 8px; border: 1px solid var(--verde-borde); margin: 8px 0;">
+                        "${m.mensaje}"
+                    </p>
+
+                    ${yaRespondido ? `
+                        <div style="background: #eef4e1; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 0.9rem;">
+                            <strong>Tu respuesta (${m.fechaRespuesta || ""}):</strong><br>
+                            ${m.respuestaAdmin}
+                        </div>
+                    ` : ""}
+
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+                        <input type="text" id="inputRespuesta-${m.idMensaje}" placeholder="Escribe una respuesta para el cliente..." style="flex: 1; min-width: 220px;" value="${yaRespondido ? m.respuestaAdmin.replace(/"/g, '&quot;') : ''}">
+                        <button type="button" class="btn-admin btn-primario btn-enviar-respuesta" data-id="${m.idMensaje}">
+                            ${yaRespondido ? "Actualizar respuesta" : "Enviar respuesta"}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+        document.querySelectorAll(".btn-enviar-respuesta").forEach(btn => {
+            btn.addEventListener("click", () => {
+                enviarRespuestaMensaje(btn.dataset.id);
+            });
+        });
+    } catch (err) {
+        console.error("Error cargando mensajes admin:", err);
+        listaMensajesAdmin.innerHTML = "<p>Error al cargar mensajes.</p>";
+    }
+}
+
+async function enviarRespuestaMensaje(idMensaje) {
+    const input = document.getElementById(`inputRespuesta-${idMensaje}`);
+    const respuesta = (input?.value || "").trim();
+
+    if (!respuesta) {
+        alert("Escribe una respuesta antes de enviar.");
+        return;
+    }
+
+    try {
+        const resp = await fetch(`${API_ADMIN_URL}/api/admin/mensajes/${idMensaje}/responder`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ Respuesta: respuesta })
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) {
+            alert(data.mensaje || "No se pudo enviar la respuesta.");
+            return;
+        }
+
+        alert("Respuesta enviada al usuario.");
+        cargarMensajesAdmin();
+    } catch (err) {
+        console.error("Error enviando respuesta:", err);
+        alert("Error de conexión al enviar respuesta.");
     }
 }

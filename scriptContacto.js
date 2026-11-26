@@ -1,6 +1,9 @@
-const formContacto = document.getElementById('formContacto');
+const API_CONTACTO_URL = "https://localhost:7270";
 
-// MÁGIA EXTRA: Si el usuario ya inició sesión, le rellenamos su nombre y correo automáticamente
+const formContacto = document.getElementById('formContacto');
+const btnVerComentarios = document.getElementById("btnVerComentarios");
+const contenedorComentarios = document.getElementById("contenedorComentariosEnviados");
+
 const usuarioActivo = JSON.parse(localStorage.getItem('usuarioQuimera'));
 
 if (usuarioActivo) {
@@ -30,20 +33,17 @@ if (usuarioActivo) {
     }
 }
 
-// LÓGICA DEL FORMULARIO
 if (formContacto) {
     formContacto.addEventListener('submit', async (e) => {
-        e.preventDefault(); // Evitamos que la página se recargue de golpe
+        e.preventDefault();
 
-        // 1. VALIDACIÓN: ¿Tiene sesión iniciada?
-        if (!usuarioActivo) {
+        const sesionActual = JSON.parse(localStorage.getItem('usuarioQuimera'));
+        if (!sesionActual) {
             alert("¡Atención! Necesitas iniciar sesión o crear una cuenta para poder enviarnos un mensaje.");
-            // Lo mandamos a la página de login para que entre
-            window.location.href = "usuario.html"; 
-            return; // Cortamos el proceso aquí para que no envíe nada
+            window.location.href = "usuario.html";
+            return;
         }
 
-        // 2. Si sí tiene sesión, recolectamos los datos escritos
         const datos = {
             nombre: document.getElementById('contactoNombre').value,
             telefono: document.getElementById('contactoTelefono').value,
@@ -51,21 +51,23 @@ if (formContacto) {
             mensaje: document.getElementById('contactoMensaje').value
         };
 
-        // 3. Enviamos el mensaje al "mesero" (C#)
         try {
-            let respuesta = await fetch('https://localhost:7270/enviar-contacto', {
+            const respuesta = await fetch(`${API_CONTACTO_URL}/enviar-contacto`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datos)
             });
 
-            let resultado = await respuesta.json();
+            const resultado = await respuesta.json();
 
             if (resultado.exito) {
-                // Mostramos alerta de éxito y borramos lo que escribió en la cajita
                 alert(resultado.mensaje);
-                document.getElementById('contactoMensaje').value = ""; 
-                document.getElementById('contactoTelefono').value = ""; 
+                document.getElementById('contactoMensaje').value = "";
+                document.getElementById('contactoTelefono').value = "";
+                if (contenedorComentarios && contenedorComentarios.style.display === "block") {
+                    await renderizarComentariosUsuario();
+                }
+                await verificarActividadRecienteComentarios();
             } else {
                 alert("Hubo un problema: " + resultado.mensaje);
             }
@@ -76,83 +78,15 @@ if (formContacto) {
     });
 }
 
-
-
-
-document.addEventListener("DOMContentLoaded", () => {
-    const mapaEl = document.getElementById("mapaRecoleccion");
-    if (!mapaEl || typeof L === "undefined") return;
-
-    const centrosRecoleccion = [
-        {
-            nombre: "Centro Quimera - Malecón / Centro",
-            lat: 19.8454,
-            lng: -90.5356,
-            direccion: "Calle 59 #12, Zona Centro, Campeche",
-            horario: "Lun a Sáb de 9:00 a 20:00 hrs",
-            instrucciones: "Presenta tu número de pedido e identificación oficial."
-        },
-        {
-            nombre: "Centro Quimera - Plaza / Norte",
-            lat: 19.8650,
-            lng: -90.5180,
-            direccion: "Av. Gobernadores #240, Col. Sascalum",
-            horario: "Lun a Dom de 10:00 a 21:00 hrs",
-            instrucciones: "Disponible 24 horas después de notificación de entrega fallida."
-        },
-        {
-            nombre: "Centro Quimera - Sur",
-            lat: 19.8180,
-            lng: -90.5320,
-            direccion: "Av. Miguel Alemán #88, Col. San José",
-            horario: "Lun a Vie de 9:00 a 19:00 hrs",
-            instrucciones: "Resguardo del paquete hasta por 5 días hábiles."
-        }
-    ];
-
-    const map = L.map("mapaRecoleccion").setView([centrosRecoleccion[0].lat, centrosRecoleccion[0].lng], 13);
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap"
-    }).addTo(map);
-
-    const botonesContenedor = document.getElementById("botonesCentros");
-    const detalleContenedor = document.getElementById("detalleCentro");
-    const marcadores = [];
-
-    function seleccionarCentro(centro, marcador) {
-        map.setView([centro.lat, centro.lng], 15);
-        marcador.openPopup();
-        detalleContenedor.innerHTML = `
-            <p style="margin-bottom: 4px;"><strong>${centro.nombre}</strong></p>
-            <p style="margin-bottom: 4px;"><strong>Dirección:</strong> ${centro.direccion}</p>
-            <p style="margin-bottom: 4px;"><strong>Horario:</strong> ${centro.horario}</p>
-            <p style="margin-bottom: 0;"><strong>Indicaciones:</strong> ${centro.instrucciones}</p>
-        `;
-    }
-
-    centrosRecoleccion.forEach(centro => {
-        const marcador = L.marker([centro.lat, centro.lng]).addTo(map);
-        marcador.bindPopup(`<strong>${centro.nombre}</strong><br>${centro.direccion}`);
-
-        marcador.on("click", () => seleccionarCentro(centro, marcador));
-        marcadores.push({ centro, marcador });
-
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.textContent = centro.nombre;
-        btn.style.cssText = "padding: 8px 14px; background: #1f3541; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-family: 'Marcellus', serif; font-size: 13px;";
-        btn.addEventListener("click", () => seleccionarCentro(centro, marcador));
-        botonesContenedor.appendChild(btn);
-    });
-});
-
-
-
-
-
-
-const API_CONTACTO_URL = "https://localhost:7270";
+function obtenerCorreoConsulta() {
+    const correoInput =
+        document.getElementById("contactoCorreo")?.value ||
+        document.getElementById("email")?.value ||
+        document.getElementById("correo")?.value ||
+        "";
+    const sesion = JSON.parse(localStorage.getItem("usuarioQuimera"));
+    return (correoInput || sesion?.correo || "").trim();
+}
 
 function guardarComentarioLocal(datos) {
     const actuales = JSON.parse(localStorage.getItem("comentariosQuimera")) || [];
@@ -164,6 +98,45 @@ function guardarComentarioLocal(datos) {
         fechaEnvio: new Date().toLocaleString("es-MX")
     });
     localStorage.setItem("comentariosQuimera", JSON.stringify(actuales));
+}
+
+async function verificarActividadRecienteComentarios() {
+    const correo = obtenerCorreoConsulta();
+    if (!btnVerComentarios || !correo) return;
+
+    if (!btnVerComentarios.dataset.textoBase) {
+        btnVerComentarios.dataset.textoBase = btnVerComentarios.textContent.trim();
+    }
+
+    try {
+        const resp = await fetch(`${API_CONTACTO_URL}/mis-comentarios/${encodeURIComponent(correo)}`);
+        if (!resp.ok) return;
+
+        const comentarios = await resp.json();
+        const sinLeer = Array.isArray(comentarios)
+            ? comentarios.filter(c => c.respuestaAdmin && !c.leidoUsuario).length
+            : 0;
+
+        if (sinLeer > 0) {
+            btnVerComentarios.innerHTML = `${btnVerComentarios.dataset.textoBase} <span style="background: #4f0802; color: #fffde7; padding: 2px 8px; border-radius: 999px; font-size: 12px; margin-left: 6px;">● ${sinLeer} nueva${sinLeer > 1 ? "s" : ""}</span>`;
+        } else {
+            btnVerComentarios.textContent = btnVerComentarios.dataset.textoBase;
+        }
+    } catch (e) {
+        console.error("Error verificando actividad reciente:", e);
+    }
+}
+
+async function marcarRespuestaLeida(idMensaje) {
+    try {
+        await fetch(`${API_CONTACTO_URL}/api/comentarios/${idMensaje}/leido`, {
+            method: "PUT"
+        });
+        await renderizarComentariosUsuario();
+        await verificarActividadRecienteComentarios();
+    } catch (e) {
+        console.error("Error marcando respuesta como leída:", e);
+    }
 }
 
 async function eliminarComentario(idMensaje, indiceLocal) {
@@ -185,12 +158,97 @@ async function eliminarComentario(idMensaje, indiceLocal) {
         localStorage.setItem("comentariosQuimera", JSON.stringify(locales));
     }
 
-    document.getElementById("btnVerComentarios").click();
-    document.getElementById("btnVerComentarios").click();
+    await renderizarComentariosUsuario();
+    await verificarActividadRecienteComentarios();
 }
 
-const btnVerComentarios = document.getElementById("btnVerComentarios");
-const contenedorComentarios = document.getElementById("contenedorComentariosEnviados");
+async function renderizarComentariosUsuario() {
+    if (!contenedorComentarios) return;
+
+    contenedorComentarios.innerHTML = "<p>Cargando comentarios...</p>";
+
+    const correoConsulta = obtenerCorreoConsulta();
+    let comentarios = [];
+    let vieneDeApi = false;
+
+    if (correoConsulta) {
+        try {
+            const resp = await fetch(`${API_CONTACTO_URL}/mis-comentarios/${encodeURIComponent(correoConsulta)}`);
+            if (resp.ok) {
+                const dataApi = await resp.json();
+                if (Array.isArray(dataApi) && dataApi.length > 0) {
+                    comentarios = dataApi;
+                    vieneDeApi = true;
+                }
+            }
+        } catch (e) {
+            console.error("Error consultando comentarios en API:", e);
+        }
+    }
+
+    if (!vieneDeApi) {
+        comentarios = JSON.parse(localStorage.getItem("comentariosQuimera")) || [];
+    }
+
+    if (!comentarios.length) {
+        contenedorComentarios.innerHTML = "<p>Aún no has enviado comentarios con este correo.</p>";
+        return;
+    }
+
+    const sinLeer = comentarios.filter(c => c.respuestaAdmin && !c.leidoUsuario).length;
+    const bannerActividad = sinLeer > 0
+        ? `<div style="background-color: #d4a20f; color: #1f3541; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-weight: bold;">
+               Actividad reciente: Tienes ${sinLeer} respuesta(s) nueva(s) de Librería Quimera.
+           </div>`
+        : "";
+
+    contenedorComentarios.innerHTML = bannerActividad + comentarios.map((c, idx) => {
+        const tieneRespuestaNueva = Boolean(c.respuestaAdmin && !c.leidoUsuario);
+
+        return `
+            <div style="background: #ffffff; border: 1px solid #d4d4d4; border-left: 5px solid ${tieneRespuestaNueva ? '#d4a20f' : '#728156'}; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px;">
+                    <p style="margin: 0;">
+                        <strong>${c.nombre || "Usuario"}</strong> — <span style="font-size: 13px; color: #555;">${c.correo || ""}</span>
+                        ${tieneRespuestaNueva ? `<span style="background: #4f0802; color: #fffde7; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 6px;">● Actividad reciente</span>` : ""}
+                    </p>
+                    <button type="button" class="btn-eliminar-comentario" data-id="${c.idMensaje || ""}" data-index="${idx}" style="background: #8b0000; color: #ffffff; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-family: 'Marcellus', serif; font-size: 13px;">
+                        Eliminar
+                    </button>
+                </div>
+                <p style="margin-bottom: 6px; font-size: 15px;">${c.mensaje}</p>
+                ${c.fechaEnvio ? `<p style="margin-bottom: 6px; font-size: 12px; color: #666;">Fecha: ${c.fechaEnvio}</p>` : ""}
+
+                ${c.respuestaAdmin ? `
+                    <div style="background: #f5f8ec; border: 1px solid #c7d3b0; border-radius: 8px; padding: 10px 12px; margin-top: 8px;">
+                        <p style="margin: 0 0 4px; font-size: 14px; color: #1f3541;"><strong>Respuesta de Librería Quimera:</strong></p>
+                        <p style="margin: 0; font-size: 14px;">${c.respuestaAdmin}</p>
+                        ${tieneRespuestaNueva ? `
+                            <button type="button" class="btn-marcar-leido" data-id="${c.idMensaje}" style="margin-top: 8px; background: #1f3541; color: #fffde7; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-family: 'Marcellus', serif; font-size: 12px;">
+                                Marcar como leída
+                            </button>
+                        ` : `<small style="display: block; margin-top: 6px; color: #4c5d66;">✓ Leída</small>`}
+                    </div>
+                ` : `<small style="color: #777;">Sin respuesta todavía.</small>`}
+            </div>
+        `;
+    }).join("");
+
+    document.querySelectorAll(".btn-eliminar-comentario").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const id = btn.dataset.id ? Number(btn.dataset.id) : null;
+            const idx = Number(btn.dataset.index);
+            eliminarComentario(id, idx);
+        });
+    });
+
+    document.querySelectorAll(".btn-marcar-leido").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const id = Number(btn.dataset.id);
+            if (id) marcarRespuestaLeida(id);
+        });
+    });
+}
 
 if (btnVerComentarios && contenedorComentarios) {
     btnVerComentarios.addEventListener("click", async () => {
@@ -200,58 +258,10 @@ if (btnVerComentarios && contenedorComentarios) {
         }
 
         contenedorComentarios.style.display = "block";
-        contenedorComentarios.innerHTML = "<p>Cargando comentarios...</p>";
-
-        const correoInput = document.getElementById("email")?.value || document.getElementById("correo")?.value || "";
-        const sesion = JSON.parse(localStorage.getItem("usuarioQuimera"));
-        const correoConsulta = (correoInput || sesion?.correo || "").trim();
-
-        let comentarios = [];
-        let vieneDeApi = false;
-
-        if (correoConsulta) {
-            try {
-                const resp = await fetch(`${API_CONTACTO_URL}/mis-comentarios/${encodeURIComponent(correoConsulta)}`);
-                if (resp.ok) {
-                    const dataApi = await resp.json();
-                    if (Array.isArray(dataApi) && dataApi.length > 0) {
-                        comentarios = dataApi;
-                        vieneDeApi = true;
-                    }
-                }
-            } catch (e) {
-                console.error("Error consultando comentarios en API:", e);
-            }
-        }
-
-        if (!vieneDeApi) {
-            comentarios = JSON.parse(localStorage.getItem("comentariosQuimera")) || [];
-        }
-
-        if (!comentarios.length) {
-            contenedorComentarios.innerHTML = "<p>Aún no has enviado comentarios con este correo.</p>";
-            return;
-        }
-
-        contenedorComentarios.innerHTML = comentarios.map((c, idx) => `
-            <div style="background: #ffffff; border: 1px solid #d4d4d4; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 4px;">
-                    <p style="margin: 0;"><strong>${c.nombre || "Usuario"}</strong> — <span style="font-size: 13px; color: #555;">${c.correo || ""}</span></p>
-                    <button type="button" class="btn-eliminar-comentario" data-id="${c.idMensaje || ""}" data-index="${idx}" style="background: #8b0000; color: #ffffff; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-family: 'Marcellus', serif; font-size: 13px;">
-                        Eliminar
-                    </button>
-                </div>
-                <p style="margin-bottom: 6px; font-size: 15px;">${c.mensaje}</p>
-                ${c.fechaEnvio ? `<p style="margin-bottom: 0; font-size: 12px; color: #666;">Fecha: ${c.fechaEnvio}</p>` : ""}
-            </div>
-        `).join("");
-
-        document.querySelectorAll(".btn-eliminar-comentario").forEach(btn => {
-            btn.addEventListener("click", () => {
-                const id = btn.dataset.id ? Number(btn.dataset.id) : null;
-                const idx = Number(btn.dataset.index);
-                eliminarComentario(id, idx);
-            });
-        });
+        await renderizarComentariosUsuario();
     });
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    verificarActividadRecienteComentarios();
+});

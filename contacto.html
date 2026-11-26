@@ -238,8 +238,9 @@
 
             const map = L.map("mapaRecoleccion").setView([19.8454, -90.5356], 12);
 
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                attribution: "&copy; OpenStreetMap"
+           L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
+            attribution: "Tiles &copy; Esri",
+            maxZoom: 19
             }).addTo(map);
 
             const selectorEstado = document.getElementById("selectorEstado");
@@ -360,8 +361,8 @@
 
                     <br><br>
                     
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 12px;"></div>
-                        <input type="submit" value="Enviar">
+                   <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 12px;">
+                     <input type="submit" value="Enviar">
 
                             <button type="button" id="btnVerComentarios" style="padding: 10px 18px; background-color: #9DAA75; color: #ffffff; border: none; border-radius: 15px; cursor: pointer;  font-size: 14px;">
                                 <strong> Ver comentarios</strong>
