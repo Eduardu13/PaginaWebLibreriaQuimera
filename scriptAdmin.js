@@ -36,6 +36,18 @@ const tabDisenoAdmin = document.getElementById("tabDisenoAdmin");
 const seccionGestionAdmin = document.getElementById("seccionGestionAdmin");
 const seccionDisenoAdmin = document.getElementById("seccionDisenoAdmin");
 
+const subtabInicioAdmin = document.getElementById("subtabInicioAdmin");
+const subtabCatalogoAdmin = document.getElementById("subtabCatalogoAdmin");
+const subtabPedidosMensajesAdmin = document.getElementById("subtabPedidosMensajesAdmin");
+const subseccionInicioAdmin = document.getElementById("subseccionInicioAdmin");
+const subseccionCatalogoAdmin = document.getElementById("subseccionCatalogoAdmin");
+const subseccionPedidosMensajesAdmin = document.getElementById("subseccionPedidosMensajesAdmin");
+
+const selectSeccionInicio = document.getElementById("selectSeccionInicio");
+const filtroCategoriaInicio = document.getElementById("filtroCategoriaInicio");
+const selectLibroInicio = document.getElementById("selectLibroInicio");
+const btnAgregarLibroSeccion = document.getElementById("btnAgregarLibroSeccion");
+
 const vistaPreviaBannerActual = document.getElementById("vistaPreviaBannerActual");
 const inputArchivoBannerPopup = document.getElementById("inputArchivoBannerPopup");
 const inputUrlBannerPopup = document.getElementById("inputUrlBannerPopup");
@@ -45,6 +57,10 @@ const btnQuitarBannerActual = document.getElementById("btnQuitarBannerActual");
 
 let todosLosLibrosAdmin = [];
 let imagenBannerTemporal = "";
+const temporalesBannersIntermedios = {
+    contacto: "",
+    ofertas: ""
+};
 
 function leerArchivoBase64(archivo) {
     return new Promise((resolve, reject) => {
@@ -71,16 +87,47 @@ function configurarSeccionesAdmin() {
         tabDisenoAdmin.classList.add("activa");
         tabGestionAdmin.classList.remove("activa");
         await cargarBannerPopupAdmin();
+        await cargarBannersIntermediosAdmin();
+    });
+}
+
+function configurarSubseccionesGestion() {
+    const tabs = [
+        { btn: subtabInicioAdmin, panel: subseccionInicioAdmin, onOpen: cargarSeccionesInicioAdmin },
+        { btn: subtabCatalogoAdmin, panel: subseccionCatalogoAdmin, onOpen: cargarLibrosAdmin },
+        { btn: subtabPedidosMensajesAdmin, panel: subseccionPedidosMensajesAdmin, onOpen: async () => {
+            await cargarPedidosAdmin();
+            await cargarMensajesAdmin();
+        }}
+    ];
+
+    tabs.forEach(item => {
+        if (!item.btn || !item.panel) return;
+        item.btn.addEventListener("click", async () => {
+            tabs.forEach(t => {
+                if (t.panel) t.panel.style.display = "none";
+                if (t.btn) t.btn.classList.remove("activa");
+            });
+            item.panel.style.display = "block";
+            item.btn.classList.add("activa");
+            if (item.onOpen) await item.onOpen();
+        });
     });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     configurarSeccionesAdmin();
+    configurarSubseccionesGestion();
+    configurarBannerIntermedioAdmin("contacto", "contacto.html");
+    configurarBannerIntermedioAdmin("ofertas", "ofertas.html");
+
     cargarCategoriasAdmin();
     cargarPedidosAdmin();
     cargarLibrosAdmin();
     cargarMensajesAdmin();
+    cargarSeccionesInicioAdmin();
     cargarBannerPopupAdmin();
+    cargarBannersIntermediosAdmin();
 });
 
 if (btnRecargarPedidos) {
@@ -97,6 +144,12 @@ if (buscarLibroAdmin) {
 
 if (filtroCategoriaAdmin) {
     filtroCategoriaAdmin.addEventListener("change", renderizarLibrosFiltrados);
+}
+
+if (filtroCategoriaInicio) {
+    filtroCategoriaInicio.addEventListener("change", () => {
+        llenarSelectLibrosInicio(todosLosLibrosAdmin);
+    });
 }
 
 if (btnRecargarMensajes) {
@@ -393,7 +446,7 @@ if (formAgregarLibro) {
 
             alert(data.mensaje || "Libro agregado correctamente.");
             formAgregarLibro.reset();
-            cargarLibrosAdmin();
+            await cargarLibrosAdmin();
         } catch (err) {
             console.error("Error al guardar libro:", err);
             alert("No se pudo conectar con la API en https://localhost:7270. Verifica que Visual Studio esté corriendo.");
@@ -415,6 +468,43 @@ function llenarFiltroCategorias(libros) {
     if (categoriasUnicas.includes(valorActual)) {
         filtroCategoriaAdmin.value = valorActual;
     }
+}
+
+function llenarFiltroCategoriasInicio(libros) {
+    if (!filtroCategoriaInicio) return;
+
+    const valorActual = filtroCategoriaInicio.value;
+    const categoriasUnicas = [...new Set(
+        (libros || []).map(l => (l.categoria || "").trim()).filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b, "es"));
+
+    filtroCategoriaInicio.innerHTML =
+        `<option value="todas">Todas las categorías</option>` +
+        categoriasUnicas.map(cat => `<option value="${cat}">${cat}</option>`).join("");
+
+    if (categoriasUnicas.includes(valorActual)) {
+        filtroCategoriaInicio.value = valorActual;
+    }
+}
+
+function llenarSelectLibrosInicio(libros) {
+    if (!selectLibroInicio) return;
+
+    const categoriaElegida = filtroCategoriaInicio?.value || "todas";
+    const listaBase = Array.isArray(libros) ? libros : [];
+
+    const filtrados = categoriaElegida === "todas"
+        ? listaBase
+        : listaBase.filter(l => (l.categoria || "").trim().toLowerCase() === categoriaElegida.toLowerCase());
+
+    if (filtrados.length === 0) {
+        selectLibroInicio.innerHTML = `<option value="">No hay libros en esta categoría</option>`;
+        return;
+    }
+
+    selectLibroInicio.innerHTML =
+        `<option value="">Selecciona un libro...</option>` +
+        filtrados.map(l => `<option value="${l.id}">${l.titulo} — ${l.autor}</option>`).join("");
 }
 
 function renderizarLibrosFiltrados() {
@@ -474,10 +564,11 @@ function renderizarLibrosFiltrados() {
 }
 
 async function cargarLibrosAdmin() {
-    if (!listaLibrosAdmin) return;
-    listaLibrosAdmin.innerHTML = "<p>Cargando libros...</p>";
-
     try {
+        if (listaLibrosAdmin) {
+            listaLibrosAdmin.innerHTML = "<p>Cargando libros...</p>";
+        }
+
         const resp = await fetch(`${API_ADMIN_URL}/obtener-productos`);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
@@ -485,10 +576,117 @@ async function cargarLibrosAdmin() {
         todosLosLibrosAdmin = Array.isArray(libros) ? libros : [];
 
         llenarFiltroCategorias(todosLosLibrosAdmin);
+        llenarFiltroCategoriasInicio(todosLosLibrosAdmin);
+        llenarSelectLibrosInicio(todosLosLibrosAdmin);
         renderizarLibrosFiltrados();
     } catch (err) {
         console.error("Error cargando libros admin:", err);
-        listaLibrosAdmin.innerHTML = "<p>Error al cargar los libros.</p>";
+        if (listaLibrosAdmin) {
+            listaLibrosAdmin.innerHTML = "<p>Error al cargar los libros.</p>";
+        }
+    }
+}
+
+async function cargarSeccionesInicioAdmin() {
+    const contenedores = {
+        recomendaciones: document.getElementById("listaInicioRecomendaciones"),
+        novedades: document.getElementById("listaInicioNovedades"),
+        mas_vendido: document.getElementById("listaInicioMasVendido")
+    };
+
+    try {
+        const resp = await fetch(`${API_ADMIN_URL}/api/admin/secciones-libros`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+        const items = await resp.json();
+        const lista = Array.isArray(items) ? items : [];
+
+        Object.entries(contenedores).forEach(([clave, cont]) => {
+            if (!cont) return;
+            const delApartado = lista.filter(x => x.seccion === clave);
+
+            if (delApartado.length === 0) {
+                cont.innerHTML = `<p style="margin:0;color:var(--texto-suave);">Sin libros asignados.</p>`;
+                return;
+            }
+
+            cont.innerHTML = delApartado.map(x => `
+                <div class="item-libro" style="padding: 10px 12px; gap: 10px;">
+                    <img src="${x.imagen || ""}" alt="Portada de ${x.titulo}" style="width: 46px; height: 68px; object-fit: cover; border-radius: 6px; border: 1px solid var(--verde-borde); flex-shrink: 0;">
+                    <div style="flex: 1; min-width: 0;">
+                        <strong>${x.titulo}</strong>
+                        <br>
+                        <small>${x.autor}</small>
+                        <br>
+                        <small><strong>$${Number(x.precio || 0).toFixed(2)}</strong> · ID: ${x.idLibro}</small>
+                    </div>
+                    <button type="button" class="btn-admin btn-peligro btn-quitar-seccion" data-id="${x.idSeccionLibro}" style="padding: 6px 10px;">
+                        Quitar
+                    </button>
+                </div>
+            `).join("");
+        });
+
+        document.querySelectorAll(".btn-quitar-seccion").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                await quitarLibroDeSeccion(btn.dataset.id);
+            });
+        });
+    } catch (err) {
+        console.error("Error cargando secciones de inicio:", err);
+    }
+}
+
+if (btnAgregarLibroSeccion) {
+    btnAgregarLibroSeccion.addEventListener("click", async () => {
+        const seccion = selectSeccionInicio?.value || "recomendaciones";
+        const idLibro = selectLibroInicio?.value || "";
+
+        if (!idLibro) {
+            alert("Selecciona un libro del catálogo.");
+            return;
+        }
+
+        try {
+            const resp = await fetch(`${API_ADMIN_URL}/api/admin/secciones-libros`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ Seccion: seccion, IdLibro: idLibro })
+            });
+
+            const data = await resp.json();
+            if (!resp.ok) {
+                alert(data.mensaje || "No se pudo agregar el libro al apartado.");
+                return;
+            }
+
+            alert(data.mensaje || "Libro agregado al apartado.");
+            await cargarSeccionesInicioAdmin();
+        } catch (err) {
+            console.error("Error asignando libro a sección:", err);
+            alert("Error de conexión al asignar el libro.");
+        }
+    });
+}
+
+async function quitarLibroDeSeccion(idSeccionLibro) {
+    if (!confirm("¿Deseas quitar este libro del apartado de Inicio?")) return;
+
+    try {
+        const resp = await fetch(`${API_ADMIN_URL}/api/admin/secciones-libros/${encodeURIComponent(idSeccionLibro)}`, {
+            method: "DELETE"
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) {
+            alert(data.mensaje || "No se pudo quitar el libro.");
+            return;
+        }
+
+        await cargarSeccionesInicioAdmin();
+    } catch (err) {
+        console.error("Error quitando libro de sección:", err);
+        alert("Error de conexión al quitar el libro.");
     }
 }
 
@@ -516,7 +714,8 @@ async function eliminarLibroAdmin(idLibro, titulo) {
         }
 
         alert(data.mensaje || "Libro eliminado.");
-        cargarLibrosAdmin();
+        await cargarLibrosAdmin();
+        await cargarSeccionesInicioAdmin();
     } catch (err) {
         console.error("Error eliminando libro:", err);
         alert(`Fallo de red/API: ${err.message}. Revisa que el backend esté corriendo en ${API_ADMIN_URL}`);
@@ -806,4 +1005,135 @@ if (btnQuitarBannerActual) {
             alert("Error de conexión al quitar el banner.");
         }
     });
+}
+
+async function cargarBannersIntermediosAdmin() {
+    try {
+        const resp = await fetch(`${API_ADMIN_URL}/api/banners-intermedios`);
+        if (!resp.ok) return;
+
+        const banners = await resp.json();
+        if (!Array.isArray(banners)) return;
+
+        banners.forEach(b => {
+            const vista = document.getElementById(
+                b.claveBanner === "contacto" ? "vistaPreviaBannerContacto" : "vistaPreviaBannerOfertas"
+            );
+            const inputEnlace = document.getElementById(
+                b.claveBanner === "contacto" ? "inputEnlaceBannerContacto" : "inputEnlaceBannerOfertas"
+            );
+            const enlaceDefecto = b.claveBanner === "contacto" ? "contacto.html" : "ofertas.html";
+
+            if (inputEnlace) inputEnlace.value = b.enlaceUrl || enlaceDefecto;
+
+            if (vista) {
+                if (b.activo && b.imagenUrl) {
+                    vista.innerHTML = `
+                        <img src="${b.imagenUrl}" alt="Banner intermedio actual">
+                        <p style="margin:0;font-size:0.92rem;color:var(--texto-suave);">
+                            <strong>Enlace:</strong> ${b.enlaceUrl || enlaceDefecto}
+                        </p>
+                    `;
+                } else {
+                    vista.innerHTML = `<p style="margin:0;color:var(--texto-suave);">No hay banner activo actualmente.</p>`;
+                }
+            }
+        });
+    } catch (err) {
+        console.error("Error cargando banners intermedios:", err);
+    }
+}
+
+function configurarBannerIntermedioAdmin(clave, enlaceDefecto) {
+    const sufijo = clave === "contacto" ? "Contacto" : "Ofertas";
+    const inputArchivo = document.getElementById(`inputArchivoBanner${sufijo}`);
+    const inputEnlace = document.getElementById(`inputEnlaceBanner${sufijo}`);
+    const btnGuardar = document.getElementById(`btnGuardarBanner${sufijo}`);
+    const btnQuitar = document.getElementById(`btnQuitarBanner${sufijo}`);
+    const vista = document.getElementById(`vistaPreviaBanner${sufijo}`);
+
+    if (inputArchivo) {
+        inputArchivo.addEventListener("change", async (e) => {
+            const archivo = e.target.files?.[0];
+            if (!archivo) return;
+
+            temporalesBannersIntermedios[clave] = await leerArchivoBase64(archivo);
+            if (vista) {
+                vista.innerHTML = `
+                    <img src="${temporalesBannersIntermedios[clave]}" alt="Vista previa">
+                    <p style="margin:0;font-size:0.9rem;color:var(--texto-suave);">
+                        Imagen lista para guardar: <strong>${archivo.name}</strong>
+                    </p>
+                `;
+            }
+        });
+    }
+
+    if (btnGuardar) {
+        btnGuardar.addEventListener("click", async () => {
+            const imagenFinal = temporalesBannersIntermedios[clave];
+            if (!imagenFinal) {
+                alert("Primero selecciona una imagen desde tu equipo.");
+                return;
+            }
+
+            try {
+                const resp = await fetch(`${API_ADMIN_URL}/api/banners-intermedios/${clave}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        ImagenUrl: imagenFinal,
+                        EnlaceUrl: (inputEnlace?.value || "").trim() || enlaceDefecto,
+                        Activo: true
+                    })
+                });
+
+                const data = await resp.json();
+                if (!resp.ok) {
+                    alert(data.mensaje || "No se pudo guardar el banner.");
+                    return;
+                }
+
+                alert(data.mensaje || "Banner actualizado correctamente.");
+                temporalesBannersIntermedios[clave] = "";
+                if (inputArchivo) inputArchivo.value = "";
+                await cargarBannersIntermediosAdmin();
+            } catch (err) {
+                console.error("Error guardando banner intermedio:", err);
+                alert("Error al guardar: " + err.message);
+            }
+        });
+    }
+
+    if (btnQuitar) {
+        btnQuitar.addEventListener("click", async () => {
+            if (!confirm("¿Deseas quitar este banner intermedio?")) return;
+
+            try {
+                const resp = await fetch(`${API_ADMIN_URL}/api/banners-intermedios/${clave}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        ImagenUrl: null,
+                        EnlaceUrl: (inputEnlace?.value || "").trim() || enlaceDefecto,
+                        Activo: false
+                    })
+                });
+
+                const data = await resp.json();
+                if (!resp.ok) {
+                    alert(data.mensaje || "No se pudo quitar el banner.");
+                    return;
+                }
+
+                alert(data.mensaje || "Banner quitado.");
+                temporalesBannersIntermedios[clave] = "";
+                if (inputArchivo) inputArchivo.value = "";
+                await cargarBannersIntermediosAdmin();
+            } catch (err) {
+                console.error("Error quitando banner intermedio:", err);
+                alert("Error al quitar: " + err.message);
+            }
+        });
+    }
 }
