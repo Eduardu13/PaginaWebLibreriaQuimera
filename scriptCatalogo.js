@@ -3148,8 +3148,8 @@
 
 // ]
 
-
 let LibrosArray = [];
+let OfertasMap = new Map();
 const API_URL = "https://localhost:7270";
 
 const contenedorProductos = document.querySelector("#contenedor-productos");
@@ -3164,6 +3164,64 @@ function normalizarIdCategoria(texto) {
         .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase()
         .replace(/[^a-z0-9]/g, "");
+}
+
+function calcularInfoOferta(precioBase, ofertaData) {
+    const precioNormal = Number(precioBase || 0);
+    if (!ofertaData) {
+        return { esOferta: false, precioFinal: precioNormal, precioViejo: null, descuentoPct: 0 };
+    }
+
+    const precioOfertaBD = ofertaData.precioOferta != null && ofertaData.precioOferta !== ""
+        ? Number(ofertaData.precioOferta)
+        : null;
+    const descuentoBD = ofertaData.descuento != null && ofertaData.descuento !== ""
+        ? Number(ofertaData.descuento)
+        : null;
+
+    let precioFinal = precioNormal;
+    let pct = 0;
+
+    if (descuentoBD != null && !Number.isNaN(descuentoBD) && descuentoBD > 0) {
+        pct = descuentoBD;
+        precioFinal = precioOfertaBD != null && !Number.isNaN(precioOfertaBD)
+            ? precioOfertaBD
+            : precioNormal * (1 - descuentoBD / 100);
+    } else if (precioOfertaBD != null && !Number.isNaN(precioOfertaBD)) {
+        precioFinal = precioOfertaBD;
+        if (precioNormal > 0 && precioOfertaBD < precioNormal) {
+            pct = Math.round(((precioNormal - precioOfertaBD) / precioNormal) * 100);
+        }
+    }
+
+    const tieneDescuento = precioFinal < precioNormal;
+    if (tieneDescuento && !pct && precioNormal > 0) {
+        pct = Math.round(((precioNormal - precioFinal) / precioNormal) * 100);
+    }
+
+    return {
+        esOferta: tieneDescuento || ofertaData.seccion === "ofertas",
+        precioFinal: Number(precioFinal.toFixed(2)),
+        precioViejo: tieneDescuento ? precioNormal.toFixed(2) : null,
+        descuentoPct: pct
+    };
+}
+
+async function cargarMapaOfertas() {
+    OfertasMap = new Map();
+    try {
+        const resp = await fetch(`${API_URL}/api/admin/secciones-libros`);
+        if (!resp.ok) return;
+
+        const items = await resp.json();
+        const ofertas = (Array.isArray(items) ? items : []).filter(item => item.seccion === "ofertas");
+
+        ofertas.forEach(item => {
+            OfertasMap.set(String(item.idLibro), item);
+        });
+    } catch (err) {
+        console.warn("No se pudieron cargar ofertas para el catálogo:", err);
+    }
 }
 
 function asignarEventosCategorias() {
@@ -3246,21 +3304,31 @@ async function cargarCategoriasMenu() {
 
 asignarEventosCategorias();
 
-fetch(`${API_URL}/obtener-productos`)
-    .then(respuesta => respuesta.json())
-    .then(async datos => {
-        LibrosArray = datos.map(libro => ({
-            id: libro.id,
-            titulo: libro.titulo,
-            precio: libro.precio,
-            stock: libro.stock,
-            imagen: libro.imagen,
-            autor: libro.autor,
-            categoria: {
-                nombre: libro.categoria,
-                id: normalizarIdCategoria(libro.categoria)
-            }
-        }));
+Promise.all([
+    fetch(`${API_URL}/obtener-productos`).then(respuesta => respuesta.json()),
+    cargarMapaOfertas()
+])
+    .then(async ([datos]) => {
+        LibrosArray = datos.map(libro => {
+            const infoOferta = calcularInfoOferta(libro.precio, OfertasMap.get(String(libro.id)));
+
+            return {
+                id: libro.id,
+                titulo: libro.titulo,
+                precio: infoOferta.precioFinal,
+                precioOriginal: Number(libro.precio || 0),
+                precioViejo: infoOferta.precioViejo,
+                esOferta: infoOferta.esOferta,
+                descuentoPct: infoOferta.descuentoPct,
+                stock: libro.stock,
+                imagen: libro.imagen,
+                autor: libro.autor,
+                categoria: {
+                    nombre: libro.categoria,
+                    id: normalizarIdCategoria(libro.categoria)
+                }
+            };
+        });
 
         await cargarCategoriasMenu();
 
@@ -3270,7 +3338,6 @@ fetch(`${API_URL}/obtener-productos`)
     })
     .catch(error => console.error("Error en C#:", error));
 
-//Esto llama a los todos los libros
 function cargarLibros(LibrosElegido) {
     if (!contenedorProductos) return;
 
@@ -3285,20 +3352,23 @@ function cargarLibros(LibrosElegido) {
     LibrosElegido.forEach(producto => {
         const div = document.createElement("div");
         div.classList.add("producto");
+        div.style.position = "relative";
 
-        // 1. Creamos una variable para guardar el diseño de nuestro precio
-        let diseñoPrecio = "";
-
-        // 2. Si el libro tiene descuento (precioViejo), armamos el diseño con el precio tachado
-        if (producto.precioViejo) {
-            diseñoPrecio = `<p class="producto-precio"><span style="text-decoration: line-through; color: #999; font-size: 0.85em; margin-right: 8px;">$${producto.precioViejo}</span> <span style="color: #c9302c; font-weight: bold;">$${producto.precio}</span></p>`;
-        } else {
-            // 3. Si no tiene descuento, lo ponemos normal
-            diseñoPrecio = `<p class="producto-precio" style="color: #856601;">$${producto.precio}</p>`;
+        let etiquetaOferta = "";
+        if (producto.esOferta) {
+            const textoEtiqueta = producto.descuentoPct > 0 ? `-${producto.descuentoPct}% OFERTA` : "OFERTA";
+            etiquetaOferta = `<span style="position:absolute;top:10px;left:10px;background:#c9302c;color:#fff;padding:4px 8px;border-radius:5px;font-size:0.78rem;font-weight:bold;z-index:2;">${textoEtiqueta}</span>`;
         }
 
-        // 4. Inyectamos la variable diseñoPrecio en la tarjeta
+        let diseñoPrecio = "";
+        if (producto.precioViejo) {
+            diseñoPrecio = `<p class="producto-precio"><span style="text-decoration: line-through; color: #999; font-size: 0.85em; margin-right: 8px;">$${Number(producto.precioViejo).toFixed(2)}</span> <span style="color: #c9302c; font-weight: bold;">$${Number(producto.precio).toFixed(2)}</span></p>`;
+        } else {
+            diseñoPrecio = `<p class="producto-precio" style="color: #856601;">$${Number(producto.precio).toFixed(2)}</p>`;
+        }
+
         div.innerHTML = `
+            ${etiquetaOferta}
             <img class="producto-img" src="${producto.imagen}" alt="${producto.titulo}">
              <div class="producto-detalles">
                  <h3 class="producto-titulo">${producto.titulo}</h3>
@@ -3321,7 +3391,6 @@ function actualizarBotonesAgregar() {
     });
 }
 
-//Esto hace que el carrito se actualize cuando agregas un libro con JSON con el almacenamiento local
 let LibrosEnCarrito;
 
 let LibrosEnCarritoLS = localStorage.getItem("libros-en-carrito");
@@ -3341,9 +3410,9 @@ function agregarAlCarrito(e) {
     if (LibrosEnCarrito.some(producto => producto.id === idBoton)) {
         const index = LibrosEnCarrito.findIndex(producto => producto.id === idBoton);
         LibrosEnCarrito[index].cantidad++;
+        LibrosEnCarrito[index].precio = libroAgregado.precio;
     } else {
-        libroAgregado.cantidad = 1;
-        LibrosEnCarrito.push(libroAgregado);
+        LibrosEnCarrito.push({ ...libroAgregado, cantidad: 1 });
     }
 
     actulizarNumerito();
@@ -3361,7 +3430,6 @@ function actulizarNumerito() {
     }
 }
 
-// AUTO-RELLENADO UNIVERSAL DE TARJETAS
 function sincronizarTarjetasEstaticas() {
     const tarjetas = document.querySelectorAll('.TarjetaLibro, .TarjetaOferta');
 
@@ -3391,19 +3459,19 @@ function sincronizarTarjetasEstaticas() {
 
                 if (precioNormal) {
                     if (libro.precioViejo) {
-                        precioNormal.innerHTML = `<span style="text-decoration: line-through; color: #999; font-size: 0.85em; margin-right: 8px;">$${libro.precioViejo}</span> <span style="color: #c9302c; font-weight: bold;">$${libro.precio}</span>`;
+                        precioNormal.innerHTML = `<span style="text-decoration: line-through; color: #999; font-size: 0.85em; margin-right: 8px;">$${Number(libro.precioViejo).toFixed(2)}</span> <span style="color: #c9302c; font-weight: bold;">$${Number(libro.precio).toFixed(2)}</span>`;
                     } else {
-                        precioNormal.innerText = `$${libro.precio}`;
+                        precioNormal.innerText = `$${Number(libro.precio).toFixed(2)}`;
                     }
                 }
 
                 if (precioViejoOferta && precioNuevoOferta) {
                     if (libro.precioViejo) {
-                        precioViejoOferta.innerText = `$${libro.precioViejo}`;
-                        precioNuevoOferta.innerText = `$${libro.precio}`;
+                        precioViejoOferta.innerText = `$${Number(libro.precioViejo).toFixed(2)}`;
+                        precioNuevoOferta.innerText = `$${Number(libro.precio).toFixed(2)}`;
                     } else {
                         precioViejoOferta.innerText = "";
-                        precioNuevoOferta.innerText = `$${libro.precio}`;
+                        precioNuevoOferta.innerText = `$${Number(libro.precio).toFixed(2)}`;
                     }
                 }
             }

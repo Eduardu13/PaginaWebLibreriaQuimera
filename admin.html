@@ -380,6 +380,9 @@
                 <button type="button" id="subtabInicioAdmin" class="btn-seccion-admin pequena activa">
                     Inicio (index)
                 </button>
+                <button type="button" id="subtabOfertasAdmin" class="btn-seccion-admin pequena">
+                    Ofertas
+                </button>
                 <button type="button" id="subtabCatalogoAdmin" class="btn-seccion-admin pequena">
                     Catálogo
                 </button>
@@ -443,6 +446,61 @@
                             <div id="listaInicioMasVendido" class="lista-scroll" style="max-height: 280px;">
                                 <p>Cargando...</p>
                             </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- SUBSECCIÓN OFERTAS -->
+            <div id="subseccionOfertasAdmin" style="display: none;">
+                <section class="tarjeta-admin" style="margin-top: 18px;">
+                    <h3>Administrar libros en Ofertas</h3>
+
+                    <div class="grid-formulario">
+                        <div class="grupo-campo">
+                            <label for="filtroCategoriaOferta">Filtrar por categoría</label>
+                            <select id="filtroCategoriaOferta">
+                                <option value="todas">Todas las categorías</option>
+                            </select>
+                        </div>
+
+                        <div class="grupo-campo">
+                            <label for="selectLibroOferta">Libro del catálogo</label>
+                            <select id="selectLibroOferta">
+                                <option value="">Cargando libros...</option>
+                            </select>
+                        </div>
+
+                        <div class="grupo-campo">
+                            <label for="precioOriginalOfertaLibro">Precio original ($)</label>
+                            <input type="number" step="0.01" id="precioOriginalOfertaLibro" readonly style="background-color: var(--bg-suave); font-weight: bold;">
+                        </div>
+
+                        <div class="grupo-campo">
+                            <label for="descuentoOfertaLibro">Descuento (%)</label>
+                            <input type="number" min="1" max="99" id="descuentoOfertaLibro" placeholder="Ej. 10">
+                        </div>
+
+                        <div class="grupo-campo">
+                            <label for="precioOfertaLibro">Precio con descuento ($)</label>
+                            <input type="number" step="0.01" min="0" id="precioOfertaLibro" placeholder="Se calcula solo">
+                        </div>
+                    </div>
+
+                    <p id="resumenCalculoOferta" style="margin: 12px 0 0; font-size: 0.94rem; color: var(--texto-suave);">
+                        Selecciona un libro y escribe el % de descuento para ver el cálculo automático.
+                    </p>
+
+                    <div class="barra-guardar">
+                        <button type="button" id="btnAgregarLibroOferta" class="btn-admin btn-primario">
+                            Agregar a ofertas
+                        </button>
+                    </div>
+
+                    <div class="caja-banner-actual" style="margin-top: 18px; margin-bottom: 0;">
+                        <h4 style="margin: 0 0 12px;">Libros actualmente en Ofertas</h4>
+                        <div id="listaLibrosOfertasAdmin" class="lista-scroll" style="max-height: 360px;">
+                            <p>Cargando ofertas...</p>
                         </div>
                     </div>
                 </section>

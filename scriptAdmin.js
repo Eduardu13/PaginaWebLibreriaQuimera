@@ -37,9 +37,12 @@ const seccionGestionAdmin = document.getElementById("seccionGestionAdmin");
 const seccionDisenoAdmin = document.getElementById("seccionDisenoAdmin");
 
 const subtabInicioAdmin = document.getElementById("subtabInicioAdmin");
+const subtabOfertasAdmin = document.getElementById("subtabOfertasAdmin");
 const subtabCatalogoAdmin = document.getElementById("subtabCatalogoAdmin");
 const subtabPedidosMensajesAdmin = document.getElementById("subtabPedidosMensajesAdmin");
+
 const subseccionInicioAdmin = document.getElementById("subseccionInicioAdmin");
+const subseccionOfertasAdmin = document.getElementById("subseccionOfertasAdmin");
 const subseccionCatalogoAdmin = document.getElementById("subseccionCatalogoAdmin");
 const subseccionPedidosMensajesAdmin = document.getElementById("subseccionPedidosMensajesAdmin");
 
@@ -47,6 +50,15 @@ const selectSeccionInicio = document.getElementById("selectSeccionInicio");
 const filtroCategoriaInicio = document.getElementById("filtroCategoriaInicio");
 const selectLibroInicio = document.getElementById("selectLibroInicio");
 const btnAgregarLibroSeccion = document.getElementById("btnAgregarLibroSeccion");
+
+const filtroCategoriaOferta = document.getElementById("filtroCategoriaOferta");
+const selectLibroOferta = document.getElementById("selectLibroOferta");
+const precioOriginalOfertaLibro = document.getElementById("precioOriginalOfertaLibro");
+const descuentoOfertaLibro = document.getElementById("descuentoOfertaLibro");
+const precioOfertaLibro = document.getElementById("precioOfertaLibro");
+const resumenCalculoOferta = document.getElementById("resumenCalculoOferta");
+const btnAgregarLibroOferta = document.getElementById("btnAgregarLibroOferta");
+const listaLibrosOfertasAdmin = document.getElementById("listaLibrosOfertasAdmin");
 
 const vistaPreviaBannerActual = document.getElementById("vistaPreviaBannerActual");
 const inputArchivoBannerPopup = document.getElementById("inputArchivoBannerPopup");
@@ -94,6 +106,7 @@ function configurarSeccionesAdmin() {
 function configurarSubseccionesGestion() {
     const tabs = [
         { btn: subtabInicioAdmin, panel: subseccionInicioAdmin, onOpen: cargarSeccionesInicioAdmin },
+        { btn: subtabOfertasAdmin, panel: subseccionOfertasAdmin, onOpen: cargarOfertasAdmin },
         { btn: subtabCatalogoAdmin, panel: subseccionCatalogoAdmin, onOpen: cargarLibrosAdmin },
         { btn: subtabPedidosMensajesAdmin, panel: subseccionPedidosMensajesAdmin, onOpen: async () => {
             await cargarPedidosAdmin();
@@ -126,6 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarLibrosAdmin();
     cargarMensajesAdmin();
     cargarSeccionesInicioAdmin();
+    cargarOfertasAdmin();
     cargarBannerPopupAdmin();
     cargarBannersIntermediosAdmin();
 });
@@ -149,6 +163,91 @@ if (filtroCategoriaAdmin) {
 if (filtroCategoriaInicio) {
     filtroCategoriaInicio.addEventListener("change", () => {
         llenarSelectLibrosInicio(todosLosLibrosAdmin);
+    });
+}
+
+if (filtroCategoriaOferta) {
+    filtroCategoriaOferta.addEventListener("change", () => {
+        llenarSelectLibrosOferta(todosLosLibrosAdmin);
+        autocompletarPrecioLibroOferta();
+    });
+}
+
+if (selectLibroOferta) {
+    selectLibroOferta.addEventListener("change", autocompletarPrecioLibroOferta);
+}
+
+function autocompletarPrecioLibroOferta() {
+    const libro = todosLosLibrosAdmin.find(l => String(l.id) === String(selectLibroOferta?.value || ""));
+    if (precioOriginalOfertaLibro) {
+        precioOriginalOfertaLibro.value = libro ? Number(libro.precio || 0).toFixed(2) : "";
+    }
+    if (descuentoOfertaLibro && descuentoOfertaLibro.value) {
+        calcularPrecioDesdeDescuento();
+    } else if (precioOfertaLibro) {
+        precioOfertaLibro.value = "";
+    }
+    actualizarCalculoOfertaEnVivo();
+}
+
+function calcularPrecioDesdeDescuento() {
+    const original = parseFloat(precioOriginalOfertaLibro?.value || "");
+    const desc = parseFloat(descuentoOfertaLibro?.value || "");
+    if (Number.isNaN(original) || original <= 0) return;
+
+    if (!Number.isNaN(desc) && desc > 0 && desc < 100) {
+        const finalCalc = original * (1 - desc / 100);
+        if (precioOfertaLibro) precioOfertaLibro.value = finalCalc.toFixed(2);
+    } else if (precioOfertaLibro) {
+        precioOfertaLibro.value = "";
+    }
+}
+
+function calcularDescuentoDesdePrecio() {
+    const original = parseFloat(precioOriginalOfertaLibro?.value || "");
+    const finalManual = parseFloat(precioOfertaLibro?.value || "");
+    if (Number.isNaN(original) || original <= 0 || Number.isNaN(finalManual) || finalManual < 0) return;
+
+    if (finalManual < original) {
+        const pct = Math.round(((original - finalManual) / original) * 100);
+        if (descuentoOfertaLibro) descuentoOfertaLibro.value = pct;
+    }
+}
+
+function actualizarCalculoOfertaEnVivo() {
+    if (!resumenCalculoOferta) return;
+
+    const original = parseFloat(precioOriginalOfertaLibro?.value || "");
+    const final = parseFloat(precioOfertaLibro?.value || "");
+    const desc = parseFloat(descuentoOfertaLibro?.value || "");
+
+    if (Number.isNaN(original) || original <= 0) {
+        resumenCalculoOferta.textContent = "Selecciona un libro y escribe el % de descuento para ver el cálculo automático.";
+        return;
+    }
+
+    if (!Number.isNaN(final) && final >= 0 && final < original) {
+        const ahorro = original - final;
+        const pct = !Number.isNaN(desc) && desc > 0 ? desc : Math.round((ahorro / original) * 100);
+        resumenCalculoOferta.innerHTML =
+            `Antes: <del>$${original.toFixed(2)}</del> → Ahora: <strong>$${final.toFixed(2)}</strong> · Descuento: <strong>-${pct}%</strong> (ahorro de <strong>$${ahorro.toFixed(2)}</strong>)`;
+    } else {
+        resumenCalculoOferta.innerHTML =
+            `Precio original del libro: <strong>$${original.toFixed(2)}</strong>. Escribe el % de descuento para calcular el nuevo precio.`;
+    }
+}
+
+if (descuentoOfertaLibro) {
+    descuentoOfertaLibro.addEventListener("input", () => {
+        calcularPrecioDesdeDescuento();
+        actualizarCalculoOfertaEnVivo();
+    });
+}
+
+if (precioOfertaLibro) {
+    precioOfertaLibro.addEventListener("input", () => {
+        calcularDescuentoDesdePrecio();
+        actualizarCalculoOfertaEnVivo();
     });
 }
 
@@ -454,13 +553,17 @@ if (formAgregarLibro) {
     });
 }
 
+function obtenerCategoriasUnicas(libros) {
+    return [...new Set(
+        (libros || []).map(l => (l.categoria || "").trim()).filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b, "es"));
+}
+
 function llenarFiltroCategorias(libros) {
     if (!filtroCategoriaAdmin) return;
 
     const valorActual = filtroCategoriaAdmin.value;
-    const categoriasUnicas = [...new Set(
-        libros.map(l => (l.categoria || "").trim()).filter(Boolean)
-    )].sort((a, b) => a.localeCompare(b, "es"));
+    const categoriasUnicas = obtenerCategoriasUnicas(libros);
 
     filtroCategoriaAdmin.innerHTML = `<option value="todas">Todas las categorías</option>` +
         categoriasUnicas.map(cat => `<option value="${cat}">${cat}</option>`).join("");
@@ -474,9 +577,7 @@ function llenarFiltroCategoriasInicio(libros) {
     if (!filtroCategoriaInicio) return;
 
     const valorActual = filtroCategoriaInicio.value;
-    const categoriasUnicas = [...new Set(
-        (libros || []).map(l => (l.categoria || "").trim()).filter(Boolean)
-    )].sort((a, b) => a.localeCompare(b, "es"));
+    const categoriasUnicas = obtenerCategoriasUnicas(libros);
 
     filtroCategoriaInicio.innerHTML =
         `<option value="todas">Todas las categorías</option>` +
@@ -505,6 +606,41 @@ function llenarSelectLibrosInicio(libros) {
     selectLibroInicio.innerHTML =
         `<option value="">Selecciona un libro...</option>` +
         filtrados.map(l => `<option value="${l.id}">${l.titulo} — ${l.autor}</option>`).join("");
+}
+
+function llenarFiltroCategoriasOferta(libros) {
+    if (!filtroCategoriaOferta) return;
+
+    const valorActual = filtroCategoriaOferta.value;
+    const categoriasUnicas = obtenerCategoriasUnicas(libros);
+
+    filtroCategoriaOferta.innerHTML =
+        `<option value="todas">Todas las categorías</option>` +
+        categoriasUnicas.map(cat => `<option value="${cat}">${cat}</option>`).join("");
+
+    if (categoriasUnicas.includes(valorActual)) {
+        filtroCategoriaOferta.value = valorActual;
+    }
+}
+
+function llenarSelectLibrosOferta(libros) {
+    if (!selectLibroOferta) return;
+
+    const categoriaElegida = filtroCategoriaOferta?.value || "todas";
+    const listaBase = Array.isArray(libros) ? libros : [];
+
+    const filtrados = categoriaElegida === "todas"
+        ? listaBase
+        : listaBase.filter(l => (l.categoria || "").trim().toLowerCase() === categoriaElegida.toLowerCase());
+
+    if (filtrados.length === 0) {
+        selectLibroOferta.innerHTML = `<option value="">No hay libros en esta categoría</option>`;
+        return;
+    }
+
+    selectLibroOferta.innerHTML =
+        `<option value="">Selecciona un libro...</option>` +
+        filtrados.map(l => `<option value="${l.id}">${l.titulo} — ${l.autor} ($${Number(l.precio || 0).toFixed(2)})</option>`).join("");
 }
 
 function renderizarLibrosFiltrados() {
@@ -578,6 +714,9 @@ async function cargarLibrosAdmin() {
         llenarFiltroCategorias(todosLosLibrosAdmin);
         llenarFiltroCategoriasInicio(todosLosLibrosAdmin);
         llenarSelectLibrosInicio(todosLosLibrosAdmin);
+        llenarFiltroCategoriasOferta(todosLosLibrosAdmin);
+        llenarSelectLibrosOferta(todosLosLibrosAdmin);
+        autocompletarPrecioLibroOferta();
         renderizarLibrosFiltrados();
     } catch (err) {
         console.error("Error cargando libros admin:", err);
@@ -669,8 +808,137 @@ if (btnAgregarLibroSeccion) {
     });
 }
 
+async function cargarOfertasAdmin() {
+    if (!listaLibrosOfertasAdmin) return;
+
+    try {
+        const resp = await fetch(`${API_ADMIN_URL}/api/admin/secciones-libros`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+        const items = await resp.json();
+        const ofertas = (Array.isArray(items) ? items : []).filter(x => x.seccion === "ofertas");
+
+        if (ofertas.length === 0) {
+            listaLibrosOfertasAdmin.innerHTML = `<p style="margin:0;color:var(--texto-suave);">No hay libros en ofertas todavía.</p>`;
+            return;
+        }
+
+        listaLibrosOfertasAdmin.innerHTML = ofertas.map(x => {
+            const precioNormal = Number(x.precio || 0);
+            const precioOfertaBD = x.precioOferta != null && x.precioOferta !== "" ? Number(x.precioOferta) : null;
+            const descuentoBD = x.descuento != null && x.descuento !== "" ? Number(x.descuento) : null;
+
+            let precioFinal = precioNormal;
+            let pctMostrar = 0;
+
+            if (descuentoBD != null && !Number.isNaN(descuentoBD) && descuentoBD > 0) {
+                pctMostrar = descuentoBD;
+                precioFinal = precioOfertaBD != null && !Number.isNaN(precioOfertaBD)
+                    ? precioOfertaBD
+                    : precioNormal * (1 - descuentoBD / 100);
+            } else if (precioOfertaBD != null && !Number.isNaN(precioOfertaBD)) {
+                precioFinal = precioOfertaBD;
+                if (precioNormal > 0 && precioOfertaBD < precioNormal) {
+                    pctMostrar = Math.round(((precioNormal - precioOfertaBD) / precioNormal) * 100);
+                }
+            }
+
+            const tieneDescuento = precioFinal < precioNormal;
+            const ahorro = tieneDescuento ? precioNormal - precioFinal : 0;
+
+            const detallePrecio = tieneDescuento
+                ? `<del style="color:var(--texto-suave);">$${precioNormal.toFixed(2)}</del> <strong>$${precioFinal.toFixed(2)}</strong> · <strong>-${pctMostrar}%</strong> (descuento de $${ahorro.toFixed(2)})`
+                : `<strong>$${precioNormal.toFixed(2)}</strong>`;
+
+            return `
+                <div class="item-libro" style="padding: 10px 12px; gap: 12px;">
+                    <img src="${x.imagen || ""}" alt="Portada de ${x.titulo}" style="width: 48px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid var(--verde-borde); flex-shrink: 0;">
+                    <div style="flex: 1; min-width: 0;">
+                        <strong>${x.titulo}</strong>
+                        <br>
+                        <small>${x.autor}</small>
+                        <br>
+                        <small>${detallePrecio} · ID: ${x.idLibro}</small>
+                    </div>
+                    <button type="button" class="btn-admin btn-peligro btn-quitar-oferta" data-id="${x.idSeccionLibro}" style="padding: 6px 12px;">
+                        Quitar
+                    </button>
+                </div>
+            `;
+        }).join("");
+
+        document.querySelectorAll(".btn-quitar-oferta").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                await quitarLibroDeSeccion(btn.dataset.id);
+                await cargarOfertasAdmin();
+            });
+        });
+    } catch (err) {
+        console.error("Error cargando ofertas:", err);
+        listaLibrosOfertasAdmin.innerHTML = `<p style="margin:0;color:var(--texto-suave);">Error al cargar los libros en oferta.</p>`;
+    }
+}
+
+if (btnAgregarLibroOferta) {
+    btnAgregarLibroOferta.addEventListener("click", async () => {
+        const idLibro = selectLibroOferta?.value || "";
+        if (!idLibro) {
+            alert("Selecciona un libro para agregar a ofertas.");
+            return;
+        }
+
+        const original = parseFloat(precioOriginalOfertaLibro?.value || "0");
+        let valorDescuento = descuentoOfertaLibro?.value ? parseInt(descuentoOfertaLibro.value, 10) : null;
+        let valorPrecioOferta = precioOfertaLibro?.value ? parseFloat(precioOfertaLibro.value) : null;
+
+        if (valorDescuento !== null && (Number.isNaN(valorDescuento) || valorDescuento <= 0 || valorDescuento >= 100)) {
+            alert("Ingresa un porcentaje de descuento entre 1 y 99.");
+            return;
+        }
+
+        if (valorDescuento !== null && original > 0 && valorPrecioOferta === null) {
+            valorPrecioOferta = Number((original * (1 - valorDescuento / 100)).toFixed(2));
+        }
+
+        if (valorPrecioOferta !== null && (Number.isNaN(valorPrecioOferta) || valorPrecioOferta < 0)) {
+            alert("Ingresa un precio de oferta válido.");
+            return;
+        }
+
+        const payload = {
+            Seccion: "ofertas",
+            IdLibro: idLibro
+        };
+        if (valorPrecioOferta !== null) payload.PrecioOferta = valorPrecioOferta;
+        if (valorDescuento !== null) payload.Descuento = valorDescuento;
+
+        try {
+            const resp = await fetch(`${API_ADMIN_URL}/api/admin/secciones-libros`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await resp.json();
+            if (!resp.ok) {
+                alert(data.mensaje || "No se pudo agregar el libro a ofertas.");
+                return;
+            }
+
+            alert(data.mensaje || "Libro agregado a ofertas.");
+            if (precioOfertaLibro) precioOfertaLibro.value = "";
+            if (descuentoOfertaLibro) descuentoOfertaLibro.value = "";
+            actualizarCalculoOfertaEnVivo();
+            await cargarOfertasAdmin();
+        } catch (err) {
+            console.error("Error agregando libro a ofertas:", err);
+            alert("Error de conexión al agregar el libro a ofertas.");
+        }
+    });
+}
+
 async function quitarLibroDeSeccion(idSeccionLibro) {
-    if (!confirm("¿Deseas quitar este libro del apartado de Inicio?")) return;
+    if (!confirm("¿Deseas quitar este libro del apartado?")) return;
 
     try {
         const resp = await fetch(`${API_ADMIN_URL}/api/admin/secciones-libros/${encodeURIComponent(idSeccionLibro)}`, {
@@ -684,6 +952,7 @@ async function quitarLibroDeSeccion(idSeccionLibro) {
         }
 
         await cargarSeccionesInicioAdmin();
+        await cargarOfertasAdmin();
     } catch (err) {
         console.error("Error quitando libro de sección:", err);
         alert("Error de conexión al quitar el libro.");
@@ -716,6 +985,7 @@ async function eliminarLibroAdmin(idLibro, titulo) {
         alert(data.mensaje || "Libro eliminado.");
         await cargarLibrosAdmin();
         await cargarSeccionesInicioAdmin();
+        await cargarOfertasAdmin();
     } catch (err) {
         console.error("Error eliminando libro:", err);
         alert(`Fallo de red/API: ${err.message}. Revisa que el backend esté corriendo en ${API_ADMIN_URL}`);
