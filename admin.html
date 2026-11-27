@@ -378,16 +378,19 @@
 
             <nav class="barra-subsecciones" aria-label="Apartados de gestión">
                 <button type="button" id="subtabInicioAdmin" class="btn-seccion-admin pequena activa">
-                    Inicio (index)
+                    Inicio
                 </button>
                 <button type="button" id="subtabOfertasAdmin" class="btn-seccion-admin pequena">
                     Ofertas
                 </button>
+                <button type="button" id="subtabCatalogoAdmin" class="btn-seccion-admin pequena">
+                    Catálogo
+                </button>
                 <button type="button" id="subtabNovedadesAdmin" class="btn-seccion-admin pequena">
                     Novedades
                 </button>
-                <button type="button" id="subtabCatalogoAdmin" class="btn-seccion-admin pequena">
-                    Catálogo
+                <button type="button" id="subtabContactoAdmin" class="btn-seccion-admin pequena">
+                    Contacto
                 </button>
                 <button type="button" id="subtabPedidosMensajesAdmin" class="btn-seccion-admin pequena">
                     Pedidos y Mensajes
@@ -397,7 +400,7 @@
             <!-- SUBSECCIÓN INICIO (INDEX) -->
             <div id="subseccionInicioAdmin">
                 <section class="tarjeta-admin" style="margin-top: 18px;">
-                    <h3>Asignar libros a apartados de Inicio (index.html)</h3>
+                    <h3>Asignar libros a apartados de Inicio</h3>
                     <div class="grid-formulario">
                         <div class="grupo-campo">
                             <label for="selectSeccionInicio">Apartado en Inicio</label>
@@ -457,7 +460,7 @@
             <!-- SUBSECCIÓN OFERTAS -->
             <div id="subseccionOfertasAdmin" style="display: none;">
                 <section class="tarjeta-admin" style="margin-top: 18px;">
-                    <h3>Administrar libros en Ofertas</h3>
+                    <h3>Agregar libros en Ofertas</h3>
 
                     <div class="grid-formulario">
                         <div class="grupo-campo">
@@ -696,6 +699,73 @@
                         </div>
                     </div>
 
+                </section>
+            </div>
+
+            <!-- SUBSECCIÓN CONTACTO -->
+            <div id="subseccionContactoAdmin" style="display: none;">
+                <section class="tarjeta-admin" style="margin-top: 18px;">
+                    <h3>Nuevo Centros de Recolección</h3>
+
+                    <form id="formCentroRecoleccion">
+                        <div class="grid-formulario">
+                            <div class="grupo-campo">
+                                <label for="estadoCentroRecoleccion">Estado</label>
+                                <input type="text" id="estadoCentroRecoleccion" placeholder="Ej. San Luis Potosí" required>
+                            </div>
+
+                            <div class="grupo-campo">
+                                <label for="nombreCentroRecoleccion">Nombre</label>
+                                <input type="text" id="nombreCentroRecoleccion" placeholder="Ej. Quimera SLP Centro" required>
+                            </div>
+
+                            <div class="grupo-campo">
+                                <label for="latCentroRecoleccion">Latitud (lat)</label>
+                                <input type="number" step="any" id="latCentroRecoleccion" placeholder="Ej. 22.1565" required>
+                            </div>
+
+                            <div class="grupo-campo">
+                                <label for="lngCentroRecoleccion">Longitud (lng)</label>
+                                <input type="number" step="any" id="lngCentroRecoleccion" placeholder="Ej. -100.9855" required>
+                            </div>
+
+                            <div class="grupo-campo">
+                                <label for="horarioCentroRecoleccion">Horario</label>
+                                <input type="text" id="horarioCentroRecoleccion" placeholder="Ej. Lun a Sáb 9:00 - 20:00">
+                            </div>
+                        </div>
+
+                        <div class="grupo-campo" style="margin-top: 14px;">
+                            <label for="direccionCentroRecoleccion">Dirección</label>
+                            <input type="text" id="direccionCentroRecoleccion" placeholder="Ej. Calle Zaragoza #340, Zona Centro, San Luis Potosí" required>
+                        </div>
+
+                        <div class="grupo-campo" style="margin-top: 14px;">
+                            <label for="instruccionesCentroRecoleccion">Instrucciones</label>
+                            <input type="text" id="instruccionesCentroRecoleccion" placeholder="Ej. Entrega directa con número de pedido.">
+                        </div>
+
+                        <div class="barra-guardar">
+                            <button type="submit" id="btnGuardarCentroRecoleccion" class="btn-admin btn-primario">
+                                Agregar centro de recolección
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="caja-banner-actual" style="margin-top: 18px; margin-bottom: 0;">
+                        <h4 style="margin: 0 0 12px;">Centros registrados</h4>
+
+                        <div class="barra-filtros">
+                            <select id="filtroEstadoCentroAdmin">
+                                <option value="todos">Todos los estados</option>
+                            </select>
+                            <input type="text" id="buscarCentroAdmin" placeholder="Buscar por nombre o dirección...">
+                        </div>
+
+                        <div id="listaCentrosRecoleccionAdmin" class="lista-scroll" style="max-height: 340px;">
+                            <p>Cargando centros...</p>
+                        </div>
+                    </div>
                 </section>
             </div>
 

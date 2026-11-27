@@ -41,12 +41,19 @@ const subtabOfertasAdmin = document.getElementById("subtabOfertasAdmin");
 const subtabNovedadesAdmin = document.getElementById("subtabNovedadesAdmin");
 const subtabCatalogoAdmin = document.getElementById("subtabCatalogoAdmin");
 const subtabPedidosMensajesAdmin = document.getElementById("subtabPedidosMensajesAdmin");
+const subtabContactoAdmin = document.getElementById("subtabContactoAdmin");
 
 const subseccionInicioAdmin = document.getElementById("subseccionInicioAdmin");
 const subseccionOfertasAdmin = document.getElementById("subseccionOfertasAdmin");
 const subseccionNovedadesAdmin = document.getElementById("subseccionNovedadesAdmin");
 const subseccionCatalogoAdmin = document.getElementById("subseccionCatalogoAdmin");
 const subseccionPedidosMensajesAdmin = document.getElementById("subseccionPedidosMensajesAdmin");
+const subseccionContactoAdmin = document.getElementById("subseccionContactoAdmin");
+
+const formCentroRecoleccion = document.getElementById("formCentroRecoleccion");
+const listaCentrosRecoleccionAdmin = document.getElementById("listaCentrosRecoleccionAdmin");
+const filtroEstadoCentroAdmin = document.getElementById("filtroEstadoCentroAdmin");
+const buscarCentroAdmin = document.getElementById("buscarCentroAdmin");
 
 const selectSeccionInicio = document.getElementById("selectSeccionInicio");
 const filtroCategoriaInicio = document.getElementById("filtroCategoriaInicio");
@@ -82,6 +89,7 @@ const btnGuardarBannerPopup = document.getElementById("btnGuardarBannerPopup");
 const btnQuitarBannerActual = document.getElementById("btnQuitarBannerActual");
 
 let todosLosLibrosAdmin = [];
+let todosLosCentrosAdmin = [];
 let imagenBannerTemporal = "";
 const temporalesBannersIntermedios = {
     contacto: "",
@@ -137,7 +145,8 @@ function configurarSubseccionesGestion() {
                 await cargarPedidosAdmin();
                 await cargarMensajesAdmin();
             }
-        }
+        },
+        { btn: subtabContactoAdmin, panel: subseccionContactoAdmin, onOpen: cargarCentrosRecoleccionAdmin }
     ];
 
     tabs.forEach(item => {
@@ -168,6 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarOfertasAdmin();
     cargarNovedadesAdmin();
     cargarBuscadosQuincenaAdmin();
+    cargarCentrosRecoleccionAdmin();
     cargarBannerPopupAdmin();
     cargarBannersIntermediosAdmin();
 });
@@ -1344,6 +1354,269 @@ async function enviarRespuestaMensaje(idMensaje) {
         alert("Error de conexión al enviar respuesta.");
     }
 }
+
+// =======================================================
+// CONTACTO — CENTROS DE RECOLECCIÓN
+// =======================================================
+
+const CENTROS_BASE_CONTACTO = [
+    { estado: "Aguascalientes", nombre: "Quimera Aguascalientes Centro", lat: 21.8818, lng: -102.2960, direccion: "Av. Francisco I. Madero #215, Zona Centro, Aguascalientes", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta tu folio de pedido e identificación." },
+    { estado: "Aguascalientes", nombre: "Quimera Aguascalientes Norte", lat: 21.9260, lng: -102.2885, direccion: "Av. Universidad #1002, Bosques del Prado Norte", horario: "Lun a Dom 10:00 - 21:00", instrucciones: "Resguardo disponible hasta por 5 días hábiles." },
+    { estado: "Baja California", nombre: "Quimera Tijuana Zona Río", lat: 32.5290, lng: -117.0220, direccion: "Paseo de los Héroes #940, Zona Urbana Río, Tijuana", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Disponible 24 horas tras intento de entrega." },
+    { estado: "Baja California", nombre: "Quimera Mexicali Centro Cívico", lat: 32.6467, lng: -115.4694, direccion: "Calz. Independencia #1120, Centro Cívico, Mexicali", horario: "Lun a Vie 9:00 - 19:00", instrucciones: "Presenta identificación oficial y número de pedido." },
+    { estado: "Baja California Sur", nombre: "Quimera La Paz Malecón", lat: 24.1426, lng: -110.3128, direccion: "Paseo Álvaro Obregón #450, Zona Centro, La Paz", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Entrega directa en mostrador de paquetes." },
+    { estado: "Baja California Sur", nombre: "Quimera Cabo San Lucas Marina", lat: 22.8905, lng: -109.9167, direccion: "Blvd. Paseo de la Marina #310, Centro, Cabo San Lucas", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Resguardo hasta por 5 días hábiles." },
+    { estado: "Campeche", nombre: "Quimera Campeche Centro", lat: 19.8454, lng: -90.5356, direccion: "Calle 59 #12, Zona Centro, San Francisco de Campeche", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta tu número de pedido e identificación." },
+    { estado: "Campeche", nombre: "Quimera Ciudad del Carmen", lat: 18.6400, lng: -91.8340, direccion: "Calle 22 #85, Col. Centro, Ciudad del Carmen", horario: "Lun a Sáb 9:30 - 19:30", instrucciones: "Disponible tras notificación de entrega pendiente." },
+    { estado: "Chiapas", nombre: "Quimera Tuxtla Gutiérrez Centro", lat: 16.7516, lng: -93.1161, direccion: "Av. Central Pte. #540, Col. Centro, Tuxtla Gutiérrez", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta folio de compra e identificación." },
+    { estado: "Chiapas", nombre: "Quimera San Cristóbal", lat: 16.7370, lng: -92.6376, direccion: "Real de Guadalupe #68, Barrio de Guadalupe, San Cristóbal", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Resguardo hasta por 5 días hábiles." },
+    { estado: "Chihuahua", nombre: "Quimera Chihuahua Centro", lat: 28.6353, lng: -106.0889, direccion: "Av. Independencia #1204, Zona Centro, Chihuahua", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Entrega con folio y credencial vigente." },
+    { estado: "Chihuahua", nombre: "Quimera Ciudad Juárez", lat: 31.7400, lng: -106.4800, direccion: "Av. Tomás Fernández #8420, Partido Iglesias, Cd. Juárez", horario: "Lun a Sáb 9:30 - 19:30", instrucciones: "Disponible 24 horas después del aviso de visita." },
+    { estado: "Ciudad de México", nombre: "Quimera CDMX Centro Histórico", lat: 19.4326, lng: -99.1332, direccion: "Av. 5 de Mayo #34, Centro Histórico, Cuauhtémoc", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Módulo de recolección con número de pedido." },
+    { estado: "Ciudad de México", nombre: "Quimera CDMX Roma / Condesa", lat: 19.4150, lng: -99.1650, direccion: "Av. Álvaro Obregón #185, Col. Roma Norte, Cuauhtémoc", horario: "Lun a Sáb 9:30 - 20:30", instrucciones: "Resguardo hasta por 5 días hábiles." },
+    { estado: "Coahuila", nombre: "Quimera Saltillo Centro", lat: 25.4232, lng: -101.0053, direccion: "Calle Victoria #412, Zona Centro, Saltillo", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Presenta tu folio e identificación oficial." },
+    { estado: "Coahuila", nombre: "Quimera Torreón Morelos", lat: 25.5428, lng: -103.4068, direccion: "Av. Morelos #1350 Pte., Col. Centro, Torreón", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Disponible tras intento de entrega en domicilio." },
+    { estado: "Colima", nombre: "Quimera Colima Jardín Libertad", lat: 19.2433, lng: -103.7240, direccion: "Portal Medellín #78, Centro, Colima", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Entrega con número de pedido e identificación." },
+    { estado: "Colima", nombre: "Quimera Manzanillo Centro", lat: 19.0522, lng: -104.3160, direccion: "Av. México #240, Col. Centro, Manzanillo", horario: "Lun a Sáb 9:30 - 19:00", instrucciones: "Resguardo hasta por 5 días hábiles." },
+    { estado: "Durango", nombre: "Quimera Durango Centro", lat: 24.0277, lng: -104.6532, direccion: "Calle 20 de Noviembre #310 Ote., Zona Centro, Durango", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Presenta tu folio de pedido e identificación." },
+    { estado: "Durango", nombre: "Quimera Gómez Palacio", lat: 25.5610, lng: -103.4980, direccion: "Av. Hidalgo #405 Nte., Zona Centro, Gómez Palacio", horario: "Lun a Vie 9:00 - 19:00", instrucciones: "Disponible 24 horas tras aviso de entrega." },
+    { estado: "Estado de México", nombre: "Quimera Toluca Centro", lat: 19.2826, lng: -99.6557, direccion: "Av. Sebastián Lerdo de Tejada #210, Centro, Toluca", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Muestra tu folio e identificación oficial." },
+    { estado: "Estado de México", nombre: "Quimera Satélite / Naucalpan", lat: 19.5100, lng: -99.2340, direccion: "Circuito Centro Comercial #120, Cd. Satélite, Naucalpan", horario: "Lun a Dom 10:00 - 20:30", instrucciones: "Resguardo disponible hasta por 5 días hábiles." },
+    { estado: "Guanajuato", nombre: "Quimera Guanajuato Centro", lat: 21.0190, lng: -101.2574, direccion: "Calle Alonso #45, Zona Centro, Guanajuato", horario: "Lun a Sáb 9:30 - 20:00", instrucciones: "Entrega directa con número de pedido." },
+    { estado: "Guanajuato", nombre: "Quimera León Zona Centro", lat: 21.1221, lng: -101.6826, direccion: "Blvd. Adolfo López Mateos #512, Centro, León", horario: "Lun a Dom 10:00 - 20:30", instrucciones: "Presenta identificación oficial y folio." },
+    { estado: "Guerrero", nombre: "Quimera Chilpancingo Centro", lat: 17.5506, lng: -99.5024, direccion: "Calle Ignacio Zaragoza #28, Centro, Chilpancingo", horario: "Lun a Sáb 9:00 - 19:00", instrucciones: "Disponible tras notificación de entrega." },
+    { estado: "Guerrero", nombre: "Quimera Acapulco Costera", lat: 16.8636, lng: -99.8824, direccion: "Av. Costera Miguel Alemán #1420, Fracc. Magallanes, Acapulco", horario: "Lun a Sáb 9:30 - 20:00", instrucciones: "Resguardo hasta por 5 días hábiles." },
+    { estado: "Hidalgo", nombre: "Quimera Pachuca Centro", lat: 20.1200, lng: -98.7330, direccion: "Calle Vicente Guerrero #118, Centro, Pachuca", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Presenta tu número de pedido e identificación." },
+    { estado: "Hidalgo", nombre: "Quimera Pachuca Zona Plateada", lat: 20.1020, lng: -98.7620, direccion: "Blvd. Felipe Ángeles #2100, Zona Plateada, Pachuca", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Entrega con folio de compra vigente." },
+    { estado: "Jalisco", nombre: "Quimera Guadalajara Centro", lat: 20.6767, lng: -103.3475, direccion: "Av. Juárez #320, Zona Centro, Guadalajara", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta folio e identificación oficial." },
+    { estado: "Jalisco", nombre: "Quimera Zapopan / Providencia", lat: 20.6920, lng: -103.3820, direccion: "Av. Terranova #640, Col. Providencia, Guadalajara / Zapopan", horario: "Lun a Dom 10:00 - 20:30", instrucciones: "Resguardo hasta por 5 días hábiles." },
+    { estado: "Michoacán", nombre: "Quimera Morelia Centro", lat: 19.7060, lng: -101.1950, direccion: "Av. Francisco I. Madero Pte. #490, Centro, Morelia", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Entrega con número de pedido e identificación." },
+    { estado: "Michoacán", nombre: "Quimera Uruapan Centro", lat: 19.4140, lng: -102.0560, direccion: "Portal Carrillo #22, Centro, Uruapan", horario: "Lun a Sáb 9:30 - 19:00", instrucciones: "Disponible 24 horas después del aviso." },
+    { estado: "Morelos", nombre: "Quimera Cuernavaca Centro", lat: 18.9242, lng: -99.2216, direccion: "Calle Guerrero #104, Centro, Cuernavaca", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Presenta folio de compra e identificación." },
+    { estado: "Morelos", nombre: "Quimera Cuernavaca Norte", lat: 18.9580, lng: -99.2340, direccion: "Av. Emiliano Zapata #720, Col. Tlaltenango, Cuernavaca", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Resguardo hasta por 5 días hábiles." },
+    { estado: "Nayarit", nombre: "Quimera Tepic Centro", lat: 21.5042, lng: -104.8946, direccion: "Av. México Nte. #265, Zona Centro, Tepic", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Entrega con número de pedido e identificación." },
+    { estado: "Nayarit", nombre: "Quimera Tepic Forum / Sur", lat: 21.4820, lng: -104.8760, direccion: "Blvd. Luis Donaldo Colosio #1520, Tepic", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Disponible tras notificación de entrega." },
+    { estado: "Nuevo León", nombre: "Quimera Monterrey Centro", lat: 25.6714, lng: -100.3095, direccion: "Calle Morelos #580, Zona Centro, Monterrey", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta tu folio de pedido e identificación." },
+    { estado: "Nuevo León", nombre: "Quimera San Pedro / Valle", lat: 25.6570, lng: -100.3680, direccion: "Av. Vasconcelos #410 Ote., Del Valle, San Pedro Garza García", horario: "Lun a Dom 10:00 - 20:30", instrucciones: "Resguardo disponible hasta por 5 días hábiles." },
+    { estado: "Oaxaca", nombre: "Quimera Oaxaca Centro", lat: 17.0654, lng: -96.7236, direccion: "Calle Macedonio Alcalá #305, Centro, Oaxaca de Juárez", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Entrega con folio e identificación oficial." },
+    { estado: "Oaxaca", nombre: "Quimera Oaxaca Jalatlaco", lat: 17.0710, lng: -96.7120, direccion: "Calle Aldama #118, Barrio de Jalatlaco, Oaxaca", horario: "Lun a Dom 10:00 - 19:30", instrucciones: "Disponible 24 horas después del intento de entrega." },
+    { estado: "Puebla", nombre: "Quimera Puebla Centro Histórico", lat: 19.0414, lng: -98.2063, direccion: "Calle 5 de Mayo #412, Centro Histórico, Puebla", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta tu número de pedido e identificación." },
+    { estado: "Puebla", nombre: "Quimera Puebla Angelópolis", lat: 19.0180, lng: -98.2480, direccion: "Blvd. del Niño Poblano #2510, Reserva Territorial Atlixcáyotl, Puebla", horario: "Lun a Dom 10:00 - 20:30", instrucciones: "Resguardo hasta por 5 días hábiles." },
+    { estado: "Querétaro", nombre: "Quimera Querétaro Centro", lat: 20.5888, lng: -100.3899, direccion: "Calle 5 de Mayo #76, Centro Histórico, Santiago de Querétaro", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Entrega con folio e identificación oficial." },
+    { estado: "Querétaro", nombre: "Quimera Querétaro Juriquilla", lat: 20.7130, lng: -100.4480, direccion: "Blvd. Villas del Mesón #890, Juriquilla, Querétaro", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Disponible tras notificación de entrega." },
+    { estado: "Quintana Roo", nombre: "Quimera Cancún Centro", lat: 21.1619, lng: -86.8515, direccion: "Av. Tulum #220, Supermanzana 22, Cancún", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta folio de pedido e identificación." },
+    { estado: "Quintana Roo", nombre: "Quimera Playa del Carmen", lat: 20.6296, lng: -87.0739, direccion: "Av. 10 entre Calles 12 y 14, Centro, Playa del Carmen", horario: "Lun a Dom 10:00 - 20:30", instrucciones: "Resguardo hasta por 5 días hábiles." },
+    { estado: "San Luis Potosí", nombre: "Quimera SLP Centro", lat: 22.1565, lng: -100.9855, direccion: "Calle Zaragoza #340, Zona Centro, San Luis Potosí", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Entrega directa con número de pedido." },
+    { estado: "San Luis Potosí", nombre: "Quimera SLP Lomas", lat: 22.1380, lng: -101.0240, direccion: "Av. Himno Nacional #4120, Lomas 2da Sección, SLP", horario: "Lun a Sáb 9:30 - 19:30", instrucciones: "Disponible 24 horas tras aviso de visita." },
+    { estado: "Sinaloa", nombre: "Quimera Culiacán Centro", lat: 24.8091, lng: -107.3940, direccion: "Av. Álvaro Obregón #610 Nte., Centro, Culiacán", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Presenta folio e identificación oficial." },
+    { estado: "Sinaloa", nombre: "Quimera Mazatlán Zona Dorada", lat: 23.2494, lng: -106.4111, direccion: "Av. Camarón Sábalo #520, Zona Dorada, Mazatlán", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Resguardo hasta por 5 días hábiles." },
+    { estado: "Sonora", nombre: "Quimera Hermosillo Centro", lat: 29.0729, lng: -110.9559, direccion: "Blvd. Luis Encinas #280, Col. Centro, Hermosillo", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Entrega con número de pedido e identificación." },
+    { estado: "Sonora", nombre: "Quimera Ciudad Obregón", lat: 27.4828, lng: -109.9304, direccion: "Calle Miguel Alemán #415 Nte., Centro, Cd. Obregón", horario: "Lun a Sáb 9:00 - 19:00", instrucciones: "Disponible tras notificación de entrega." },
+    { estado: "Tabasco", nombre: "Quimera Villahermosa Tabasco 2000", lat: 17.9940, lng: -92.9310, direccion: "Av. Paseo Tabasco #1204, Tabasco 2000, Villahermosa", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta tu folio e identificación oficial." },
+    { estado: "Tabasco", nombre: "Quimera Villahermosa Centro", lat: 17.9892, lng: -92.9175, direccion: "Calle Juárez #312, Zona Centro, Villahermosa", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Resguardo disponible hasta por 5 días hábiles." },
+    { estado: "Tamaulipas", nombre: "Quimera Tampico Centro", lat: 22.2153, lng: -97.8569, direccion: "Calle Salvador Díaz Mirón #210 Ote., Zona Centro, Tampico", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Entrega con folio de pedido e identificación." },
+    { estado: "Tamaulipas", nombre: "Quimera Ciudad Victoria", lat: 23.7369, lng: -99.1411, direccion: "Calle 17 Hidalgo y Juárez #145, Zona Centro, Cd. Victoria", horario: "Lun a Vie 9:00 - 19:00", instrucciones: "Disponible 24 horas después del aviso." },
+    { estado: "Tlaxcala", nombre: "Quimera Tlaxcala Centro", lat: 19.3182, lng: -98.2375, direccion: "Plaza de la Constitución #14, Centro, Tlaxcala", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Presenta número de pedido e identificación." },
+    { estado: "Tlaxcala", nombre: "Quimera Apizaco Centro", lat: 19.4136, lng: -98.1419, direccion: "Av. Cuauhtémoc #308, Centro, Apizaco", horario: "Lun a Sáb 9:30 - 19:00", instrucciones: "Resguardo hasta por 5 días hábiles." },
+    { estado: "Veracruz", nombre: "Quimera Xalapa Centro", lat: 19.5438, lng: -96.9102, direccion: "Calle Enríquez #92, Zona Centro, Xalapa", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Entrega con folio e identificación oficial." },
+    { estado: "Veracruz", nombre: "Quimera Veracruz Puerto / Boca", lat: 19.1738, lng: -96.1342, direccion: "Av. Salvador Díaz Mirón #1540, Moderno, Veracruz", horario: "Lun a Dom 10:00 - 20:00", instrucciones: "Disponible tras notificación de entrega." },
+    { estado: "Yucatán", nombre: "Quimera Mérida Centro", lat: 20.9674, lng: -89.6243, direccion: "Calle 60 #482, Centro, Mérida, Yucatán", horario: "Lun a Sáb 9:00 - 20:00", instrucciones: "Presenta tu número de pedido e identificación." },
+    { estado: "Yucatán", nombre: "Quimera Mérida Norte / Montejo", lat: 21.0120, lng: -89.6150, direccion: "Paseo de Montejo #465, Itzimná, Mérida, Yucatán", horario: "Lun a Dom 10:00 - 20:30", instrucciones: "Resguardo disponible hasta por 5 días hábiles." },
+    { estado: "Zacatecas", nombre: "Quimera Zacatecas Centro", lat: 22.7709, lng: -102.5832, direccion: "Av. Hidalgo #422, Centro Histórico, Zacatecas", horario: "Lun a Sáb 9:00 - 19:30", instrucciones: "Entrega con folio e identificación oficial." },
+    { estado: "Zacatecas", nombre: "Quimera Guadalupe Zacatecas", lat: 22.7520, lng: -102.5100, direccion: "Av. Colegio Militar #215, Centro, Guadalupe, Zacatecas", horario: "Lun a Sáb 9:30 - 19:00", instrucciones: "Disponible 24 horas después del aviso." }
+];
+
+function llenarFiltroEstadoCentros(centros) {
+    if (!filtroEstadoCentroAdmin) return;
+    const valorActual = filtroEstadoCentroAdmin.value;
+    const estados = [...new Set(
+        (centros || []).map(c => (c.estado || "").trim()).filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b, "es"));
+
+    filtroEstadoCentroAdmin.innerHTML =
+        `<option value="todos">Todos los estados</option>` +
+        estados.map(est => `<option value="${est}">${est}</option>`).join("");
+
+    if (estados.includes(valorActual)) {
+        filtroEstadoCentroAdmin.value = valorActual;
+    }
+}
+
+function renderizarCentrosFiltradosAdmin() {
+    if (!listaCentrosRecoleccionAdmin) return;
+
+    const estadoElegido = filtroEstadoCentroAdmin?.value || "todos";
+    const texto = (buscarCentroAdmin?.value || "").trim().toLowerCase();
+
+    const filtrados = todosLosCentrosAdmin.filter(c => {
+        const coincideEstado =
+            estadoElegido === "todos" ||
+            (c.estado || "").trim().toLowerCase() === estadoElegido.toLowerCase();
+
+        const coincideTexto =
+            !texto ||
+            (c.nombre || "").toLowerCase().includes(texto) ||
+            (c.direccion || "").toLowerCase().includes(texto) ||
+            (c.estado || "").toLowerCase().includes(texto);
+
+        return coincideEstado && coincideTexto;
+    });
+
+    if (filtrados.length === 0) {
+        listaCentrosRecoleccionAdmin.innerHTML = `<p style="margin:0;color:var(--texto-suave);">No hay centros que coincidan con el filtro.</p>`;
+        return;
+    }
+
+    listaCentrosRecoleccionAdmin.innerHTML = filtrados.map(c => `
+        <div class="item-libro">
+            <div>
+                <strong>${c.nombre}</strong> (${c.estado})
+                <br>
+                <small>Dirección: ${c.direccion}</small>
+                <br>
+                <small>Coords: ${c.lat}, ${c.lng}</small>
+                ${c.horario ? `<br><small>Horario: ${c.horario}</small>` : ""}
+                ${c.instrucciones ? `<br><small>Instrucciones: ${c.instrucciones}</small>` : ""}
+            </div>
+            ${c.idCentro ? `
+                <button type="button" class="btn-admin btn-peligro btn-eliminar-centro" data-id="${c.idCentro}" data-nombre="${c.nombre}">
+                    Eliminar
+                </button>
+            ` : `
+                <small style="color:var(--texto-suave);">Base</small>
+            `}
+        </div>
+    `).join("");
+
+    document.querySelectorAll(".btn-eliminar-centro").forEach(btn => {
+        btn.addEventListener("click", () => {
+            eliminarCentroRecoleccionAdmin(btn.dataset.id, btn.dataset.nombre);
+        });
+    });
+}
+
+async function cargarCentrosRecoleccionAdmin() {
+    if (!listaCentrosRecoleccionAdmin) return;
+    listaCentrosRecoleccionAdmin.innerHTML = "<p>Cargando centros...</p>";
+
+    let centrosBD = [];
+    try {
+        const resp = await fetch(`${API_ADMIN_URL}/api/centros-recoleccion`);
+        if (resp.ok) {
+            const data = await resp.json();
+            centrosBD = Array.isArray(data) ? data : [];
+        }
+    } catch (err) {
+        console.error("Error cargando centros desde API:", err);
+    }
+
+    const clavesBD = new Set(
+        centrosBD.map(c => `${(c.estado || "").trim().toLowerCase()}|${(c.nombre || "").trim().toLowerCase()}`)
+    );
+
+    const baseSinDuplicar = CENTROS_BASE_CONTACTO
+        .filter(c => !clavesBD.has(`${c.estado.toLowerCase()}|${c.nombre.toLowerCase()}`));
+
+    todosLosCentrosAdmin = [...centrosBD, ...baseSinDuplicar];
+    llenarFiltroEstadoCentros(todosLosCentrosAdmin);
+    renderizarCentrosFiltradosAdmin();
+}
+
+if (filtroEstadoCentroAdmin) {
+    filtroEstadoCentroAdmin.addEventListener("change", renderizarCentrosFiltradosAdmin);
+}
+
+if (buscarCentroAdmin) {
+    buscarCentroAdmin.addEventListener("input", renderizarCentrosFiltradosAdmin);
+}
+
+if (formCentroRecoleccion) {
+    formCentroRecoleccion.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const estado = (document.getElementById("estadoCentroRecoleccion")?.value || "").trim();
+        const nombre = (document.getElementById("nombreCentroRecoleccion")?.value || "").trim();
+        const lat = parseFloat(document.getElementById("latCentroRecoleccion")?.value || "");
+        const lng = parseFloat(document.getElementById("lngCentroRecoleccion")?.value || "");
+        const horario = (document.getElementById("horarioCentroRecoleccion")?.value || "").trim();
+        const direccion = (document.getElementById("direccionCentroRecoleccion")?.value || "").trim();
+        const instrucciones = (document.getElementById("instruccionesCentroRecoleccion")?.value || "").trim();
+
+        if (!estado || !nombre || !direccion || Number.isNaN(lat) || Number.isNaN(lng)) {
+            alert("Completa estado, nombre, latitud, longitud y dirección.");
+            return;
+        }
+
+        try {
+            const resp = await fetch(`${API_ADMIN_URL}/api/admin/centros-recoleccion`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    Estado: estado,
+                    Nombre: nombre,
+                    Lat: lat,
+                    Lng: lng,
+                    Direccion: direccion,
+                    Horario: horario || null,
+                    Instrucciones: instrucciones || null
+                })
+            });
+
+            const texto = await resp.text();
+            let data = {};
+            try {
+                data = JSON.parse(texto);
+            } catch {
+                data = { mensaje: texto || `Error HTTP ${resp.status}` };
+            }
+
+            if (!resp.ok) {
+                alert(data.mensaje || `No se pudo agregar el centro (HTTP ${resp.status}).`);
+                return;
+            }
+
+            alert(data.mensaje || "Centro de recolección agregado correctamente.");
+            formCentroRecoleccion.reset();
+            await cargarCentrosRecoleccionAdmin();
+        } catch (err) {
+            console.error("Error guardando centro de recolección:", err);
+            alert("Error de conexión al guardar el centro de recolección.");
+        }
+    });
+}
+
+async function eliminarCentroRecoleccionAdmin(idCentro, nombre) {
+    if (!confirm(`¿Seguro que deseas eliminar "${nombre}"?`)) return;
+
+    try {
+        const resp = await fetch(`${API_ADMIN_URL}/api/admin/centros-recoleccion/${encodeURIComponent(idCentro)}`, {
+            method: "DELETE"
+        });
+
+        const texto = await resp.text();
+        let data = {};
+        try {
+            data = JSON.parse(texto);
+        } catch {
+            data = { mensaje: texto || `Error HTTP ${resp.status}` };
+        }
+
+        if (!resp.ok) {
+            alert(data.mensaje || `No se pudo eliminar el centro (HTTP ${resp.status}).`);
+            return;
+        }
+
+        alert(data.mensaje || "Centro de recolección eliminado.");
+        await cargarCentrosRecoleccionAdmin();
+    } catch (err) {
+        console.error("Error eliminando centro de recolección:", err);
+        alert("Error de conexión al eliminar el centro de recolección.");
+    }
+}
+
+// =======================================================
+// DISEÑO Y APARIENCIA — BANNERS
+// =======================================================
 
 async function cargarBannerPopupAdmin() {
     if (!vistaPreviaBannerActual) return;
