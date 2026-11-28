@@ -1,4 +1,4 @@
-const API_BUSCADOR_URL = "https://localhost:7270";
+const API_BUSCADOR_URL = "https://apilibreriaquimera.onrender.com";
 let librosParaBuscar = [];
 
 function normalizarTextoBuscador(texto) {

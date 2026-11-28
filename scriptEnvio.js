@@ -1,5 +1,5 @@
 const formEnvio = document.getElementById('formEnvio');
-const API_ENVIO_URL = 'https://localhost:7270';
+const API_ENVIO_URL = 'https://apilibreriaquimera.onrender.com';
 const TASA_IVA = 0.16;
 
 function calcularResumenCarrito(carrito) {

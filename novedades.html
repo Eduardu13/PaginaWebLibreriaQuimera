@@ -206,7 +206,7 @@
         }
 
         try {
-            const resp = await fetch("https://localhost:7270/api/admin/secciones-libros");
+            const resp = await fetch("https://apilibreriaquimera.onrender.com/api/admin/secciones-libros");
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
             const items = await resp.json();

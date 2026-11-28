@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (sessionStorage.getItem("popupMostrado")) return;
 
     try {
-        const resp = await fetch("https://localhost:7270/api/banner-popup");
+        const resp = await fetch("https://apilibreriaquimera.onrender.com/api/banner-popup");
         if (!resp.ok) return;
 
         const data = await resp.json();

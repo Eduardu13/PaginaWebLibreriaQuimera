@@ -1,4 +1,4 @@
-const API_ADMIN_URL = "https://localhost:7270";
+const API_ADMIN_URL = "https://apilibreriaquimera.onrender.com";
 const CORREO_ADMIN = "admin@quimera.com";
 
 const usuarioAdmin = JSON.parse(localStorage.getItem("usuarioQuimera"));

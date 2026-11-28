@@ -1,4 +1,4 @@
-const API_URL_PERFIL = "https://localhost:7270";
+const API_URL_PERFIL = "https://apilibreriaquimera.onrender.com";
 
 // 1. Verificamos que el usuario esté logueado
 const usuarioActivo = JSON.parse(localStorage.getItem('usuarioQuimera'));

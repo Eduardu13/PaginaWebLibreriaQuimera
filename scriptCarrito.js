@@ -1,4 +1,4 @@
-const API_URL = "https://localhost:7270"; // Cambia 7270 si tu API corre en otro puerto
+const API_URL = "https://apilibreriaquimera.onrender.com";
 
 let LibrosEnCarrito = localStorage.getItem("libros-en-carrito");
 LibrosEnCarrito = LibrosEnCarrito ? JSON.parse(LibrosEnCarrito) : [];

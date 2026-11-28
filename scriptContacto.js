@@ -1,4 +1,4 @@
-const API_CONTACTO_URL = "https://localhost:7270";
+const API_CONTACTO_URL = "https://apilibreriaquimera.onrender.com";
 
 const formContacto = document.getElementById('formContacto');
 const btnVerComentarios = document.getElementById("btnVerComentarios");

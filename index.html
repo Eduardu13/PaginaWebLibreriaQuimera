@@ -209,7 +209,7 @@
     <script>
     document.addEventListener("DOMContentLoaded", async () => {
         try {
-            const resp = await fetch("https://localhost:7270/api/banners-intermedios");
+            const resp = await fetch("https://apilibreriaquimera.onrender.com/api/banners-intermedios");
             if (!resp.ok) return;
 
             const banners = await resp.json();
@@ -262,7 +262,7 @@
         });
 
         try {
-            const resp = await fetch("https://localhost:7270/api/admin/secciones-libros");
+            const resp = await fetch("https://apilibreriaquimera.onrender.com/api/admin/secciones-libros");
             if (!resp.ok) return;
 
             const items = await resp.json();

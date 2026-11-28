@@ -3150,7 +3150,7 @@
 
 let LibrosArray = [];
 let OfertasMap = new Map();
-const API_URL = "https://localhost:7270";
+const API_URL = "https://apilibreriaquimera.onrender.com";
 
 const contenedorProductos = document.querySelector("#contenedor-productos");
 let botonesCategorias = document.querySelectorAll(".boton-categoria");

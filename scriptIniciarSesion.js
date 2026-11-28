@@ -37,7 +37,7 @@ if (btnCrearCuenta) {
 
         try {
             // ACTUALIZADO AL PUERTO 7270 Y RUTA /api/registro
-            let respuesta = await fetch('https://localhost:7270/api/registro', {
+            let respuesta = await fetch('https://apilibreriaquimera.onrender.com/api/registro', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datos)
@@ -80,7 +80,7 @@ if (btnIngresar) {
 
         try {
             // ACTUALIZADO AL PUERTO 7270 Y RUTA /api/login
-            let respuesta = await fetch('https://localhost:7270/api/login', {
+            let respuesta = await fetch('https://apilibreriaquimera.onrender.com/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datos)

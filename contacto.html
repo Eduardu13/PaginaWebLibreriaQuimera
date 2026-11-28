@@ -206,7 +206,7 @@
 
         let centrosTotales = [...centrosRecoleccion];
         try {
-            const respCentros = await fetch("https://localhost:7270/api/centros-recoleccion");
+            const respCentros = await fetch("https://apilibreriaquimera.onrender.com/api/centros-recoleccion");
             if (respCentros.ok) {
                 const extraCentros = await respCentros.json();
                 if (Array.isArray(extraCentros)) {
